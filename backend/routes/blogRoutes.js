@@ -6,7 +6,9 @@ import {
     updateBlog,
     deleteBlog,
     uploadBlogImage,
-    upload
+    upload,
+    generateAIBlog,
+    generateAIBulkBlogs
 } from '../controllers/blogController.js';
 
 const router = express.Router();
@@ -20,5 +22,9 @@ router.post('/', createBlog);
 router.put('/:id', updateBlog);
 router.delete('/:id', deleteBlog);
 router.post('/upload-image', upload.single('image'), uploadBlogImage);
+
+// AI Generation Routes
+router.post('/generate-ai', generateAIBlog);
+router.post('/generate-ai-bulk', generateAIBulkBlogs);
 
 export default router;

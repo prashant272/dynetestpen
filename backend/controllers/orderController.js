@@ -32,8 +32,23 @@ export const addOrderItems = async (req, res) => {
             let token = null;
             let userInfo = null;
 
-            if (req.user && req.user._id) {
-                userId = req.user._id;
+            if (req.user && (req.user._id || req.user.id)) {
+                userId = req.user._id || req.user.id;
+            } else if (shippingAddress && (shippingAddress.email || shippingAddress.phone)) {
+                // Find or auto-create customer record from shipping address details
+                const customerQuery = shippingAddress.email
+                    ? { email: shippingAddress.email }
+                    : { phone: shippingAddress.phone };
+                let customer = await User.findOne(customerQuery);
+                if (!customer) {
+                    customer = await User.create({
+                        name: shippingAddress.name || 'Valued Customer',
+                        email: shippingAddress.email || `client_${Date.now()}@imagetech.com`,
+                        phone: shippingAddress.phone || '9999999999',
+                        password: `client_${Date.now()}`
+                    });
+                }
+                userId = customer._id;
             } else {
                 return res.status(401).json({ message: 'User must be logged in to place an order' });
             }
@@ -59,12 +74,18 @@ export const addOrderItems = async (req, res) => {
             console.log("📝 Creating order for user:", userId);
             const createdOrder = await order.save();
             
-            // Decrease product stock
+            // Try decreasing product stock if product exists locally
             for (const item of orderItems) {
-                const product = await Product.findById(item.product);
-                if (product) {
-                    product.stock = Math.max(0, product.stock - item.qty);
-                    await product.save();
+                if (item.product) {
+                    try {
+                        const product = await Product.findById(item.product);
+                        if (product) {
+                            product.stock = Math.max(0, product.stock - item.qty);
+                            await product.save();
+                        }
+                    } catch (e) {
+                        // Remote catalog product id not present in local db - safe to ignore
+                    }
                 }
             }
 
@@ -325,7 +346,7 @@ export const downloadOrderInvoice = async (req, res) => {
     }
 };
 
-// @desc    Delete order (Admin) - allowed for Pending, Unpaid, or Cancelled orders
+// @desc    Delete order (Admin) - allowed for any order by Admin
 // @route   DELETE /api/orders/:id
 // @access  Private/Admin
 export const deleteOrder = async (req, res) => {
@@ -334,33 +355,6 @@ export const deleteOrder = async (req, res) => {
 
         if (!order) {
             return res.status(404).json({ message: 'Order not found' });
-        }
-
-        const normalizedStatus = (order.status || '').toUpperCase();
-        const deletableStatuses = [
-            'PENDING',
-            'PENDING_PAYMENT',
-            'PAYMENT_PROCESSING',
-            'ORDER PLACED',
-            'CREATED',
-            'CANCELLED'
-        ];
-
-        if (!deletableStatuses.includes(normalizedStatus)) {
-            return res.status(400).json({
-                message: `Cannot delete order with status "${order.status}". Only Pending or Cancelled orders can be deleted.`
-            });
-        }
-
-        // Restore product inventory stock if order was in pending phase and stock had been reserved
-        if (order.orderItems && order.orderItems.length > 0 && normalizedStatus !== 'CANCELLED') {
-            for (const item of order.orderItems) {
-                if (item.product) {
-                    await Product.findByIdAndUpdate(item.product, {
-                        $inc: { stock: item.qty }
-                    });
-                }
-            }
         }
 
         // Remove associated payment ledger record if exists

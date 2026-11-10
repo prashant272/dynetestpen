@@ -33,13 +33,13 @@ const blogSchema = new mongoose.Schema({
         default: null
     },
     category: {
-        type: String,
-        enum: ['Style Guides', 'Behind the Scenes', 'New Arrivals', 'Styling Tips', 'General'],
-        default: 'General'
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'BlogCategory',
+        required: true
     },
     author: {
         type: String,
-        default: 'Own Vibes Team'
+        default: 'ImageTech Indistries Team'
     },
     publishedDate: {
         type: Date,

@@ -1,21 +1,32 @@
-import Razorpay from 'razorpay';
 import crypto from 'crypto';
 import dotenv from 'dotenv';
 dotenv.config();
+
+let razorpayInstance = null;
+const getRazorpayInstance = async () => {
+    if (!razorpayInstance) {
+        try {
+            const RazorpayModule = await import('razorpay');
+            const Razorpay = RazorpayModule.default || RazorpayModule;
+            const keyId = process.env.RAZORPAY_KEY_ID;
+            const keySecret = process.env.RAZORPAY_KEY_SECRET;
+            if (keyId && keySecret) {
+                razorpayInstance = new Razorpay({
+                    key_id: keyId,
+                    key_secret: keySecret
+                });
+            }
+        } catch (e) {
+            console.warn('⚠️ Razorpay not initialized or not needed for B2B portal:', e.message);
+        }
+    }
+    return razorpayInstance;
+};
 
 // Ensure keys exist
 const keyId = process.env.RAZORPAY_KEY_ID;
 const keySecret = process.env.RAZORPAY_KEY_SECRET;
 const webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET;
-
-if (!keyId || !keySecret) {
-    console.warn('⚠️ Razorpay credentials missing in environment variables');
-}
-
-const razorpayInstance = new Razorpay({
-    key_id: keyId,
-    key_secret: keySecret
-});
 
 /**
  * Creates an order in Razorpay
@@ -27,6 +38,10 @@ const razorpayInstance = new Razorpay({
  */
 export const createRazorpayOrder = async ({ amountInInr, receipt, notes = {} }) => {
     try {
+        const rzp = await getRazorpayInstance();
+        if (!rzp) {
+            throw new Error('Payment gateway is disabled. All inquiries and orders are processed as B2B Leads.');
+        }
         const amountInPaise = Math.round(amountInInr * 100);
         const options = {
             amount: amountInPaise,
@@ -34,11 +49,11 @@ export const createRazorpayOrder = async ({ amountInInr, receipt, notes = {} }) 
             receipt: receipt.toString().slice(-40), // Razorpay limits receipt to 40 chars
             notes: {
                 ...notes,
-                platform: 'Ownvibes Web'
+                platform: 'ImageTech Web'
             }
         };
 
-        const razorpayOrder = await razorpayInstance.orders.create(options);
+        const razorpayOrder = await rzp.orders.create(options);
         return razorpayOrder;
     } catch (error) {
         console.error('❌ Razorpay Order Creation Error:', error);
@@ -117,7 +132,9 @@ export const verifyWebhookSignature = (rawBody, signature) => {
  */
 export const fetchPaymentDetails = async (paymentId) => {
     try {
-        return await razorpayInstance.payments.fetch(paymentId);
+        const rzp = await getRazorpayInstance();
+        if (!rzp) return null;
+        return await rzp.payments.fetch(paymentId);
     } catch (error) {
         console.error(`❌ Error fetching Razorpay payment ${paymentId}:`, error);
         return null;
@@ -135,6 +152,8 @@ export const fetchPaymentDetails = async (paymentId) => {
  */
 export const createRefund = async ({ paymentId, amountInInr, reason = '', notes = {} }) => {
     try {
+        const rzp = await getRazorpayInstance();
+        if (!rzp) return null;
         const options = {
             notes: {
                 ...notes,
@@ -146,7 +165,7 @@ export const createRefund = async ({ paymentId, amountInInr, reason = '', notes 
             options.amount = Math.round(amountInInr * 100); // convert to paise
         }
 
-        const refund = await razorpayInstance.payments.refund(paymentId, options);
+        const refund = await rzp.payments.refund(paymentId, options);
         return refund;
     } catch (error) {
         console.error(`❌ Razorpay Refund Error for ${paymentId}:`, error);

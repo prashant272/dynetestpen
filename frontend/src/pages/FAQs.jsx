@@ -1,86 +1,154 @@
 import React, { useState } from 'react';
-import { ChevronDown, ChevronUp } from 'lucide-react';
+import { ChevronDown, HelpCircle, FileText, ShieldCheck, Mail, Phone } from 'lucide-react';
 import SEO from '../components/SEO';
+import RequestQuoteModal from '../components/common/RequestQuoteModal';
 
 const FAQs = () => {
     const [openIndex, setOpenIndex] = useState(null);
+    const [isQuoteOpen, setIsQuoteOpen] = useState(false);
 
-    const faqs = [
+    const faqData = [
         {
-            question: "What materials do you use for your t-shirts?",
-            answer: "All Ownvibes t-shirts are crafted from 100% premium combed and bio-washed cotton. We prioritize breathable, hypoallergenic, and durable fabrics that provide ultimate comfort and maintain their shape wash after wash."
+            category: "Dyne Test Pens & Inks",
+            questions: [
+                {
+                    q: "What is a Dyne Test Pen and how does it determine surface energy?",
+                    a: "A Dyne test pen is an analytical tool formulated with calibrated liquids having known surface tensions (measured in mN/m or Dyne/cm). When applied to a polymer substrate, if the liquid film stays continuous for at least 2 seconds without beading up, the surface energy of the substrate is equal to or greater than the pen's dyne value."
+                },
+                {
+                    q: "What international standards do MAGNET Dyne Pens conform to?",
+                    a: "All ImageTech MAGNET Dyne Pens and Dyne Test Inks are strictly formulated, batch-tested, and calibrated per ASTM D2578, ISO 8296, and DIN 53364 international standards for polyolefin and plastic films."
+                },
+                {
+                    q: "What is the advantage of valve-action pens over standard felt tip markers?",
+                    a: "Valve-action Dyne pens feature a spring-loaded tip that seals the reservoir hermetically. Unlike capillary felt markers which absorb surface dust, contaminants, and wax from films into the reservoir, valve pens only release fresh fluid on demand, guaranteeing zero cross-contamination and accurate readings."
+                },
+                {
+                    q: "What dyne levels are typically required for printing and lamination?",
+                    a: "Generally, BOPP, PET, and PE films require at least 38 Dyne/cm for solvent-based flexo printing, 42-44 Dyne/cm for water-based or UV inks, and 40-42 Dyne/cm for solventless or extrusion lamination."
+                }
+            ]
         },
         {
-            question: "How do I care for and wash my Ownvibes apparel?",
-            answer: "We recommend machine washing on a gentle, cold cycle with like colors. Turn the t-shirt inside out to protect any prints or embroidery. Avoid bleach and tumble drying; let it air dry in the shade to preserve fabric softness and color vibrancy."
+            category: "Doctor Blades & Technical Specifications",
+            questions: [
+                {
+                    q: "What edge profiles are available for ImageTech Doctor Blades?",
+                    a: "We manufacture Lamella (stepped), Beveled, and Rounded edge doctor blades from high-grade Swedish carbon steel and ceramic-coated alloys. Lamella edges are ideal for precise flexographic metering with constant contact area throughout the blade life."
+                },
+                {
+                    q: "Can ImageTech provide Certificate of Analysis (CoA) with shipments?",
+                    a: "Yes. Every batch of MAGNET Dyne Pens and Dyne Inks comes with a batch number and a Certificate of Analysis confirming tensiometer surface tension measurement and ISO 9001:2015 quality control signoff."
+                }
+            ]
         },
         {
-            question: "Do you offer international shipping?",
-            answer: "Currently, we ship across all major cities and pin codes in India. We are working hard to bring Ownvibes styles to international customers very soon!"
-        },
-        {
-            question: "Can I include a gift message with my order?",
-            answer: "Absolutely! During checkout, you can add a personalized gift message, which we will include with your package."
-        },
-        {
-            question: "What if I receive a damaged or incorrect product?",
-            answer: "We take extreme care in quality checks and packaging. In the rare event of receiving a damaged or incorrect item, please contact us within 48 hours of delivery at info@ownvibes.com with your Order ID and photos, and we will arrange a hassle-free replacement immediately."
+            category: "Commercial, Bulk Supply & Dispatch",
+            questions: [
+                {
+                    q: "Do you supply customized Dyne levels or OEM private label branding?",
+                    a: "Yes. We offer contract OEM manufacturing with customized pen body labeling, private branded packaging, and non-standard dyne calibrations (from 28 to 72 Dyne/cm in 0.5 increments upon request) for international distributors."
+                },
+                {
+                    q: "What are your standard delivery timelines across India and internationally?",
+                    a: "Standard stock Dyne pens and inks (28 to 56 Dyne/cm) are dispatched within 24 hours of purchase order receipt. Bulk contracts and custom doctor blade coils typically dispatch in 3 to 5 business days."
+                }
+            ]
         }
     ];
 
+    const toggleFaq = (idx) => {
+        setOpenIndex(openIndex === idx ? null : idx);
+    };
+
     return (
-    <div className="pt-4 pb-20 min-h-screen bg-[#fdfaf7] font-sans">
-      <SEO 
-        title="FAQs" 
-        description="Find answers to common questions about Ownvibes's premium t-shirts, shipping, safety, and more."
-        schema={{
-          "@context": "https://schema.org",
-          "@type": "FAQPage",
-          "mainEntity": faqs.map(faq => ({
-            "@type": "Question",
-            "name": faq.question,
-            "acceptedAnswer": {
-              "@type": "Answer",
-              "text": faq.answer
-            }
-          }))
-        }}
-      />
-            <div className="max-w-3xl mx-auto px-4">
-                <div className="text-center mb-12">
-                    <h1 className="text-4xl md:text-5xl font-black text-[#1c1c1c] tracking-tight mb-4">Frequently Asked Questions</h1>
-                    <p className="text-lg text-gray-500 font-medium">
-                        Got a question? We've got answers!
-                    </p>
-                </div>
+        <main className="pt-8 pb-20 min-h-screen bg-[#F5F8FC] font-sans">
+            <SEO
+                title="Technical FAQs | ImageTech Industries"
+                description="Frequently asked technical questions regarding MAGNET Dyne Test Pens, ASTM D2578 surface energy measurement, doctor blade edge profiles, and bulk supply."
+                keywords={["dyne pen faq", "surface tension measurement test", "how to use dyne pen", "astm d2578"]}
+            />
+
+            <div className="max-w-4xl mx-auto px-4">
                 
-                <div className="space-y-4">
-                    {faqs.map((faq, idx) => (
-                        <div 
-                            key={idx} 
-                            className="bg-white border border-[#f5eadb] rounded-2xl overflow-hidden shadow-sm transition-all"
-                        >
-                            <button 
-                                onClick={() => setOpenIndex(openIndex === idx ? null : idx)}
-                                className="w-full px-6 py-5 flex items-center justify-between bg-white hover:bg-gray-50 transition-colors text-left"
-                            >
-                                <span className="font-bold text-[#1c1c1c]">{faq.question}</span>
-                                {openIndex === idx ? (
-                                    <ChevronUp className="w-5 h-5 text-[#cf7e28] shrink-0" />
-                                ) : (
-                                    <ChevronDown className="w-5 h-5 text-gray-400 shrink-0" />
-                                )}
-                            </button>
-                            {openIndex === idx && (
-                                <div className="px-6 pb-5 text-[#483d36] leading-relaxed border-t border-gray-50 bg-gray-50/50 pt-4">
-                                    {faq.answer}
-                                </div>
-                            )}
+                <header className="text-center mb-12">
+                    <div className="inline-flex items-center gap-1.5 bg-[#0B3B6F]/10 text-[#0B3B6F] text-xs font-bold uppercase tracking-wider px-3.5 py-1 rounded-full mb-3">
+                        <HelpCircle size={14} />
+                        <span>Technical Knowledgebase</span>
+                    </div>
+                    <h1 className="text-3xl md:text-4xl font-black text-[#172B4D] tracking-tight mb-3">
+                        Frequently Asked Questions
+                    </h1>
+                    <p className="text-sm md:text-base text-gray-500 max-w-xl mx-auto">
+                        Detailed answers regarding surface energy testing principles, ASTM standards, shelf life, and order fulfillment.
+                    </p>
+                </header>
+
+                <div className="space-y-8">
+                    {faqData.map((section, secIdx) => (
+                        <div key={secIdx} className="bg-white rounded-2xl p-6 sm:p-8 border border-[#DCE5EF] shadow-xs">
+                            <h2 className="text-base font-bold text-[#0B3B6F] uppercase tracking-wider pb-3 mb-4 border-b border-gray-100 flex items-center gap-2">
+                                <ShieldCheck size={18} className="text-[#0D6EFD]" />
+                                {section.category}
+                            </h2>
+
+                            <div className="space-y-3">
+                                {section.questions.map((faq, itemIdx) => {
+                                    const globalIdx = `${secIdx}-${itemIdx}`;
+                                    const isOpen = openIndex === globalIdx;
+
+                                    return (
+                                        <div 
+                                            key={itemIdx}
+                                            className="border border-[#DCE5EF] rounded-xl overflow-hidden transition-colors"
+                                        >
+                                            <button
+                                                onClick={() => toggleFaq(globalIdx)}
+                                                className="w-full text-left p-4 bg-[#F5F8FC] hover:bg-gray-100/80 flex items-center justify-between gap-4 font-bold text-xs sm:text-sm text-[#172B4D] transition-colors"
+                                            >
+                                                <span>{faq.q}</span>
+                                                <ChevronDown 
+                                                    size={16} 
+                                                    className={`shrink-0 text-[#0B3B6F] transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} 
+                                                />
+                                            </button>
+                                            {isOpen && (
+                                                <div className="p-4 bg-white text-xs sm:text-sm text-gray-600 leading-relaxed border-t border-[#DCE5EF]">
+                                                    {faq.a}
+                                                </div>
+                                            )}
+                                        </div>
+                                    );
+                                })}
+                            </div>
                         </div>
                     ))}
                 </div>
+
+                {/* Direct Help Strip */}
+                <div className="mt-12 bg-white rounded-2xl p-6 border border-[#DCE5EF] flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
+                    <div>
+                        <h3 className="text-sm font-bold text-[#172B4D]">Have a specialized substrate or application question?</h3>
+                        <p className="text-xs text-gray-500 mt-0.5">
+                            Our laboratory technicians are available to analyze your test samples.
+                        </p>
+                    </div>
+                    <button
+                        onClick={() => setIsQuoteOpen(true)}
+                        className="bg-[#0B3B6F] hover:bg-[#0D6EFD] text-white px-5 py-2.5 rounded-lg text-xs font-bold transition-colors whitespace-nowrap"
+                    >
+                        Ask Technical Team
+                    </button>
+                </div>
+
             </div>
-        </div>
+
+            <RequestQuoteModal
+                isOpen={isQuoteOpen}
+                onClose={() => setIsQuoteOpen(false)}
+                initialProduct="Technical Inquiry / FAQ Page"
+            />
+        </main>
     );
 };
 

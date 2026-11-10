@@ -1,77 +1,90 @@
 import React from 'react';
+import { Truck, ShieldCheck, Clock, MapPin, Package, AlertCircle } from 'lucide-react';
 import SEO from '../components/SEO';
 
 const ShippingPolicy = () => {
     return (
-    <div className="pt-4 pb-20 min-h-screen bg-[#fdfaf7] font-sans">
-      <SEO 
-        title="Shipping Policy"
-        description="Details on Ownvibes's shipping rates, processing times, and delivery estimates across India."
-      />
+        <main className="pt-8 pb-20 min-h-screen bg-[#F5F8FC] font-sans">
+            <SEO
+                title="Shipping & Logistics Policy | ImageTech Industries"
+                description="Commercial dispatch, freight terms, courier tracking, and industrial delivery guidelines for ImageTech Dyne Pens, Inks and Doctor Blades across India and global destinations."
+            />
+
             <div className="max-w-4xl mx-auto px-4">
-                <div className="text-center mb-12">
-                    <h1 className="text-4xl md:text-5xl font-black text-[#1c1c1c] tracking-tight mb-4">Shipping Policy</h1>
-                    <p className="text-lg text-gray-500 font-medium">
-                        How and when your new best friend will arrive.
-                    </p>
-                </div>
                 
-                <div className="bg-white rounded-[30px] p-8 md:p-12 shadow-xl shadow-[#cf7e28]/5 border border-[#f5eadb]">
-                    <div className="space-y-8 text-[#483d36] leading-relaxed">
-                        <section>
-                            <h2 className="text-2xl font-extrabold text-[#1c1c1c] mb-4">Processing Time</h2>
-                            <p>
-                                All orders are processed within 1-2 business days (excluding weekends and holidays) after receiving your order confirmation email. You will receive another notification when your order has shipped containing your tracking number.
-                            </p>
-                        </section>
-
-                        <section>
-                            <h2 className="text-2xl font-extrabold text-[#1c1c1c] mb-4">Shipping Rates & Delivery Estimates</h2>
-                            <p className="mb-4">
-                                Shipping charges for your order will be calculated and displayed at checkout.
-                            </p>
-                            <div className="overflow-x-auto">
-                                <table className="w-full text-left border-collapse">
-                                    <thead>
-                                        <tr className="border-b-2 border-[#f5eadb]">
-                                            <th className="py-3 pr-4 font-bold text-[#1c1c1c]">Shipping Method</th>
-                                            <th className="py-3 px-4 font-bold text-[#1c1c1c]">Estimated Delivery Time</th>
-                                            <th className="py-3 pl-4 font-bold text-[#1c1c1c]">Cost</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-gray-100">
-                                        <tr>
-                                            <td className="py-3 pr-4">Standard Delivery</td>
-                                            <td className="py-3 px-4">4-6 Business Days</td>
-                                            <td className="py-3 pl-4">₹49 (Free over ₹999)</td>
-                                        </tr>
-                                        <tr>
-                                            <td className="py-3 pr-4">Express Delivery</td>
-                                            <td className="py-3 px-4">2-3 Business Days</td>
-                                            <td className="py-3 pl-4">₹149</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </section>
-
-                        <section>
-                            <h2 className="text-2xl font-extrabold text-[#1c1c1c] mb-4">In-Store Pickup</h2>
-                            <p>
-                                You can skip the shipping fees with free local pickup at our main warehouse at C-31, Nawada Housing Complex, New Delhi-110059. After placing your order and selecting local pickup at checkout, your order will be prepared and ready for pick up within 1 business day. We will send you an email when your order is ready along with instructions.
-                            </p>
-                        </section>
-
-                        <section>
-                            <h2 className="text-2xl font-extrabold text-[#1c1c1c] mb-4">How do I check the status of my order?</h2>
-                            <p>
-                                When your order has shipped, you will receive an email notification from us which will include a tracking number you can use to check its status. Please allow 48 hours for the tracking information to become available. You can also view real-time tracking updates directly in the "My Orders" section of your account.
-                            </p>
-                        </section>
+                <header className="text-center mb-10">
+                    <div className="inline-flex items-center gap-1.5 bg-[#0B3B6F]/10 text-[#0B3B6F] text-xs font-bold uppercase tracking-wider px-3.5 py-1 rounded-full mb-3">
+                        <Truck size={14} />
+                        <span>Logistics &amp; Fulfillment</span>
                     </div>
-                </div>
+                    <h1 className="text-3xl md:text-4xl font-black text-[#172B4D] tracking-tight mb-2">
+                        Shipping &amp; Logistics Policy
+                    </h1>
+                    <p className="text-xs md:text-sm text-gray-500">
+                        Reliable nationwide delivery with certified chemical packaging protocols.
+                    </p>
+                </header>
+
+                <article className="bg-white rounded-2xl p-6 sm:p-10 border border-[#DCE5EF] shadow-xs space-y-8 text-xs md:text-sm text-gray-600 leading-relaxed">
+                    
+                    <section>
+                        <h2 className="text-base font-bold text-[#0B3B6F] uppercase tracking-wider pb-2 mb-3 border-b border-gray-100 flex items-center gap-2">
+                            <Clock size={18} className="text-[#0D6EFD]" />
+                            Order Processing &amp; Dispatch Schedule
+                        </h2>
+                        <p className="mb-2">
+                            All standard catalog orders for <strong>MAGNET Dyne Test Pens</strong> and <strong>Dyne Inks</strong> received before 3:00 PM IST (Monday through Friday) are dispatched on the same business day from our New Delhi manufacturing facility.
+                        </p>
+                        <p>
+                            Custom dyne levels, special OEM branding, and customized slit doctor blade coils require a technical lead time of 2 to 4 working days for precision formulation, calibration, and QC release.
+                        </p>
+                    </section>
+
+                    <section>
+                        <h2 className="text-base font-bold text-[#0B3B6F] uppercase tracking-wider pb-2 mb-3 border-b border-gray-100 flex items-center gap-2">
+                            <MapPin size={18} className="text-[#0D6EFD]" />
+                            Nationwide &amp; Global Delivery Timelines
+                        </h2>
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 my-3">
+                            <div className="bg-[#F5F8FC] p-3.5 rounded-xl border border-[#DCE5EF]">
+                                <h3 className="font-bold text-[#172B4D] text-xs mb-1">NCR &amp; North India</h3>
+                                <p className="text-xs text-gray-500">1 – 2 Business Days via Express Surface / Air Cargo.</p>
+                            </div>
+                            <div className="bg-[#F5F8FC] p-3.5 rounded-xl border border-[#DCE5EF]">
+                                <h3 className="font-bold text-[#172B4D] text-xs mb-1">Major Indian Metros</h3>
+                                <p className="text-xs text-gray-500">2 – 3 Business Days (Mumbai, Bengaluru, Chennai, Kolkata, Ahmedabad).</p>
+                            </div>
+                            <div className="bg-[#F5F8FC] p-3.5 rounded-xl border border-[#DCE5EF]">
+                                <h3 className="font-bold text-[#172B4D] text-xs mb-1">International Air Freight</h3>
+                                <p className="text-xs text-gray-500">5 – 8 Business Days via DHL / FedEx International Priority.</p>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section>
+                        <h2 className="text-base font-bold text-[#0B3B6F] uppercase tracking-wider pb-2 mb-3 border-b border-gray-100 flex items-center gap-2">
+                            <Package size={18} className="text-[#0D6EFD]" />
+                            Chemical Safety &amp; Shock-Proof Packaging
+                        </h2>
+                        <p>
+                            All test ink bottles are double-sealed with inner plugs and packaged in protective thermoformed cushions to prevent pressure leakage during transit. Dyne test pens are individually sleeved and hermetically boxed with tamper-evident batch labels.
+                        </p>
+                    </section>
+
+                    <section>
+                        <h2 className="text-base font-bold text-[#0B3B6F] uppercase tracking-wider pb-2 mb-3 border-b border-gray-100 flex items-center gap-2">
+                            <ShieldCheck size={18} className="text-[#0D6EFD]" />
+                            Tracking &amp; Proof of Delivery (POD)
+                        </h2>
+                        <p>
+                            As soon as your shipment is picked up by our logistics partner (Blue Dart, DTDC, FedEx, or Delhivery), an automated dispatch notification with real-time AWB tracking is sent via email and SMS.
+                        </p>
+                    </section>
+
+                </article>
+
             </div>
-        </div>
+        </main>
     );
 };
 

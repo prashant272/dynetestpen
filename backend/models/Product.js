@@ -1,89 +1,47 @@
 import mongoose from 'mongoose';
 
-const productSchema = new mongoose.Schema({
-    name: {
-        type: String,
-        required: [true, 'Please provide product name'],
-        trim: true,
-    },
-    slug: {
-        type: String,
-        unique: true,
-    },
-    description: {
-        type: String,
-        required: [true, 'Please provide product description'],
-    },
-    price: {
-        type: Number,
-        required: [true, 'Please provide product price'],
-    },
-    category: {
-        type: String,
-        required: [true, 'Please provide product category'],
-    },
-    images: [
-        {
-            type: String,
-            required: true,
-        },
-    ],
-    stock: {
-        type: Number,
-        default: 0,
-    },
-    ageGroup: {
-        type: String,
-        default: '',
-    },
-    sizes: [{
-        type: String,
-    }],
-    bulletPoints: [{
-        type: String,
-    }],
-    isNewArrival: {
-        type: Boolean,
-        default: false,
-    },
-    isBestSeller: {
-        type: Boolean,
-        default: false,
-    },
-    video: {
-        type: String,
-        default: '',
-    },
-    views: {
-        type: Number,
-        default: 0,
-    },
-    baseViews: {
-        type: Number,
-        default: 0,
-    },
-    likes: {
-        type: Number,
-        default: 0,
-    },
-    createdAt: {
-        type: Date,
-        default: Date.now,
-    },
-    rating: {
-        type: Number,
-        default: 0,
-    },
-    numReviews: {
-        type: Number,
-        default: 0,
-    }
-});
+const infoBoxSchema = new mongoose.Schema({
+  title: String,
+  value: String,
+  icon: String
+}, { _id: false });
 
-productSchema.pre('save', function () {
-    if (this.isModified('name')) {
-        this.slug = this.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
-    }
-});
+const overviewFeatureSchema = new mongoose.Schema({
+  title: String,
+  desc: String,
+  icon: String
+}, { _id: false });
+
+const faqSchema = new mongoose.Schema({
+  question: String,
+  answer: String
+}, { _id: false });
+
+const specificationSchema = new mongoose.Schema({
+  label: String,
+  value: String
+}, { _id: false });
+
+const productSchema = new mongoose.Schema({
+  title: { type: String, required: true },
+  slug: { type: String, required: true, unique: true },
+  category: { type: mongoose.Schema.Types.ObjectId, ref: 'Category', required: true },
+  subcategory: { type: mongoose.Schema.Types.ObjectId, ref: 'Subcategory' },
+  isSpecial: { type: Boolean, default: false },
+  price: { type: Number, default: 0 },
+  shortDesc: { type: String },
+  longDesc: { type: String },
+  images: [{ type: String }],
+  videos: [{ type: String }],
+  features: [{ type: String }],
+  infoBoxes: [infoBoxSchema],
+  overviewFeatures: [overviewFeatureSchema],
+  overviewText: [{ type: String }],
+  faqs: [faqSchema],
+  specifications: [specificationSchema],
+  seoTitle: { type: String },
+  seoDescription: { type: String },
+  seoKeywords: { type: String }
+}, { timestamps: true });
 
 export default mongoose.model('Product', productSchema);

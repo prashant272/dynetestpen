@@ -68,11 +68,13 @@ function App() {
       onNeedRefresh: () => setNeedRefresh(true),
     });
 
-    // Silent wake-up call to spin up backend on Render
-    fetch(`${API_BASE_URL}/wakeup`)
-      .then(res => res.json())
-      .then(data => console.log('Wake-up call successful:', data))
-      .catch((err) => console.log('Wake-up call failed/ignored:', err)); // Fire and forget
+    // Silent wake-up call (if endpoint exists)
+    if (API_BASE_URL.includes('onrender.com')) {
+      fetch(`${API_BASE_URL}/wakeup`)
+        .then(res => res.json())
+        .then(data => console.log('Wake-up call successful:', data))
+        .catch(() => {});
+    }
   }, []);
 
   return (
@@ -137,12 +139,16 @@ function App() {
                       <Route path="/checkout/success" element={<SuccessPage />} />
                       <Route path="/my-orders" element={<MyOrders />} />
                       <Route path="/about" element={<AboutUs />} />
+                      <Route path="/about-us" element={<AboutUs />} />
                       <Route path="/contact" element={<ContactUs />} />
+                      <Route path="/contact-us" element={<ContactUs />} />
                       <Route path="/faqs" element={<FAQs />} />
                       <Route path="/shipping-policy" element={<ShippingPolicy />} />
                       <Route path="/return-policy" element={<ReturnPolicy />} />
                       <Route path="/terms" element={<TermsConditions />} />
+                      <Route path="/terms-conditions" element={<TermsConditions />} />
                       <Route path="/privacy" element={<PrivacyPolicy />} />
+                      <Route path="/privacy-policy" element={<PrivacyPolicy />} />
                       <Route path="/help" element={<HelpCenter />} />
                       <Route path="/blog" element={<BlogPage />} />
                       <Route path="/blog/:slug" element={<BlogDetail />} />

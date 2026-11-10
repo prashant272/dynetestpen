@@ -2,21 +2,21 @@ import nodemailer from 'nodemailer';
 import dotenv from 'dotenv';
 dotenv.config();
 
+const EMAIL_USER = process.env.EMAIL_USER || 'enquiry.imagetechindustries@gmail.com';
+const EMAIL_PASS = process.env.EMAIL_PASS || 'svbjvordlunftpwx';
+const EMAIL_TO = process.env.EMAIL_TO || 'sales.imagetechindustries@gmail.com, imagetechindustries@gmail.com';
+
 const transporter = nodemailer.createTransport({
-    host: process.env.BREVO_SMTP_HOST,
-    port: process.env.BREVO_SMTP_PORT || 587,
-    secure: false, // true for 465, false for other ports
+    service: 'gmail',
     auth: {
-        user: process.env.BREVO_SMTP_USER,
-        pass: process.env.BREVO_SMTP_PASS,
+        user: EMAIL_USER,
+        pass: EMAIL_PASS,
     },
 });
 
-const FROM_EMAIL = process.env.BREVO_FROM_EMAIL || 'info@ownvibes.com';
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'info@ownvibes.com'; // Default fallback for bcc
+const FROM_HEADER = `"ImageTech Industries Portal" <${EMAIL_USER}>`;
 
-// Helper to format currency
-const formatPrice = (price) => `₹${Number(price).toFixed(2)}`;
+const formatPrice = (price) => `₹${Number(price || 0).toFixed(2)}`;
 
 /**
  * Base email layout wrapper
@@ -29,32 +29,28 @@ const getEmailLayout = (title, content) => `
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>${title}</title>
 </head>
-<body style="margin: 0; padding: 0; background-color: #f6f6f6; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased;">
-    <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
-        <!-- Card Container -->
-        <div style="background-color: #ffffff; border-radius: 12px; padding: 40px 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
+<body style="margin: 0; padding: 0; background-color: #F5F8FC; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+    <div style="max-width: 620px; margin: 0 auto; padding: 25px 15px;">
+        <div style="background-color: #ffffff; border-radius: 16px; border: 1px solid #DCE5EF; padding: 32px 28px; box-shadow: 0 4px 20px rgba(13, 110, 253, 0.05);">
             
             <!-- Header -->
-            <div style="text-align: center; padding-bottom: 25px; border-bottom: 1px solid #f0f0f0; margin-bottom: 30px;">
-                <h1 style="margin: 0; color: #111111; font-size: 28px; font-weight: 800; letter-spacing: 3px; text-transform: uppercase;">OWNVIBES</h1>
+            <div style="text-align: center; padding-bottom: 18px; border-bottom: 2px solid #F0F4F8; margin-bottom: 24px;">
+                <h1 style="margin: 0; color: #172B4D; font-size: 22px; font-weight: 800; letter-spacing: 0.5px;">IMAGETECH INDUSTRIES</h1>
+                <p style="margin: 4px 0 0 0; color: #0D6EFD; font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase;">Surface Energy Testing & Industrial Solutions</p>
             </div>
             
-            <!-- Body Content -->
-            <div style="color: #444444; font-size: 16px; line-height: 1.6;">
+            <!-- Body -->
+            <div style="color: #172B4D; font-size: 14px; line-height: 1.6;">
                 ${content}
             </div>
             
             <!-- Footer -->
-            <div style="margin-top: 40px; padding-top: 25px; border-top: 1px solid #f0f0f0; text-align: center;">
-                <p style="margin: 0; color: #888888; font-size: 13px; margin-bottom: 10px;">
-                    Questions? Reach out to our support team.
+            <div style="margin-top: 32px; padding-top: 18px; border-top: 1px solid #E5EAF2; text-align: center;">
+                <p style="margin: 0 0 4px 0; color: #64748B; font-size: 11px;">
+                    <strong>ImageTech Industries</strong> • RZ-I-13, 2nd Floor, Nanda Block, Mahavir Enclave, New Delhi - 110045
                 </p>
-                <div style="margin-bottom: 15px;">
-                    <a href="${process.env.CLIENT_URL || 'http://localhost:5173'}" style="color: #cf7e28; text-decoration: none; font-weight: bold; font-size: 14px; margin: 0 10px;">Shop</a>
-                    <a href="${process.env.CLIENT_URL || 'http://localhost:5173'}/my-orders" style="color: #cf7e28; text-decoration: none; font-weight: bold; font-size: 14px; margin: 0 10px;">My Orders</a>
-                </div>
-                <p style="margin: 0; color: #aaaaaa; font-size: 12px;">
-                    &copy; ${new Date().getFullYear()} Ownvibes. All rights reserved.
+                <p style="margin: 0; color: #64748B; font-size: 11px;">
+                    Phone: +91 8448336036, +91 8851016580 | Email: sales.imagetechindustries@gmail.com
                 </p>
             </div>
             
@@ -65,73 +61,166 @@ const getEmailLayout = (title, content) => `
 `;
 
 /**
- * Sends the Order Placed Email
+ * 1. Sends Lead Notification when someone fills Contact / RFQ Form
+ * Delivered to: sales.imagetechindustries@gmail.com & imagetechindustries@gmail.com
+ */
+export const sendEnquiryNotificationEmail = async (enquiry) => {
+    try {
+        const subject = `🔔 [NEW LEAD INQUIRY] ${enquiry.name || 'Client'} - ${enquiry.phone || 'Phone'}`;
+
+        const content = `
+            <div style="background-color: #EFF6FF; border-left: 4px solid #0D6EFD; padding: 14px 16px; border-radius: 8px; margin-bottom: 20px;">
+                <h2 style="color: #0D6EFD; font-size: 16px; margin: 0 0 4px 0; font-weight: 700;">New RFQ Lead / Inquiry Received</h2>
+                <p style="margin: 0; color: #475569; font-size: 12.5px;">A new customer inquiry has arrived from the ImageTech Industries website.</p>
+            </div>
+
+            <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 13.5px;">
+                <tr>
+                    <td style="padding: 9px 0; border-bottom: 1px solid #F1F5F9; color: #64748B; width: 140px; font-weight: 600;">Customer Name:</td>
+                    <td style="padding: 9px 0; border-bottom: 1px solid #F1F5F9; color: #172B4D; font-weight: 700;">${enquiry.name || 'N/A'}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 9px 0; border-bottom: 1px solid #F1F5F9; color: #64748B; font-weight: 600;">Mobile / Phone:</td>
+                    <td style="padding: 9px 0; border-bottom: 1px solid #F1F5F9; color: #0D6EFD; font-weight: 700;">
+                        <a href="tel:${enquiry.phone}" style="color: #0D6EFD; text-decoration: none;">${enquiry.phone || 'N/A'}</a>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 9px 0; border-bottom: 1px solid #F1F5F9; color: #64748B; font-weight: 600;">Email Address:</td>
+                    <td style="padding: 9px 0; border-bottom: 1px solid #F1F5F9; color: #172B4D; font-weight: 600;">
+                        <a href="mailto:${enquiry.email}" style="color: #172B4D; text-decoration: none;">${enquiry.email || 'N/A'}</a>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 9px 0; border-bottom: 1px solid #F1F5F9; color: #64748B; font-weight: 600;">Company / Firm:</td>
+                    <td style="padding: 9px 0; border-bottom: 1px solid #F1F5F9; color: #172B4D; font-weight: 600;">${enquiry.company || 'Not Specified'}</td>
+                </tr>
+                ${enquiry.subject ? `
+                <tr>
+                    <td style="padding: 9px 0; border-bottom: 1px solid #F1F5F9; color: #64748B; font-weight: 600;">Subject / Product:</td>
+                    <td style="padding: 9px 0; border-bottom: 1px solid #F1F5F9; color: #172B4D; font-weight: 700;">${enquiry.subject}</td>
+                </tr>` : ''}
+            </table>
+
+            <div style="margin-bottom: 22px;">
+                <label style="display: block; color: #64748B; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;">Customer Inquiry Message:</label>
+                <div style="background-color: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 8px; padding: 14px; color: #1E293B; font-size: 13.5px; white-space: pre-wrap; line-height: 1.5;">
+                    ${enquiry.message || 'No additional message provided.'}
+                </div>
+            </div>
+
+            <div style="text-align: center; margin-top: 24px;">
+                <a href="${process.env.CLIENT_URL || 'http://localhost:5173'}/admin" style="display: inline-block; background-color: #0D6EFD; color: #ffffff; text-decoration: none; padding: 11px 26px; border-radius: 8px; font-weight: 700; font-size: 13px;">Open Admin Leads Panel</a>
+            </div>
+        `;
+
+        await transporter.sendMail({
+            from: FROM_HEADER,
+            to: EMAIL_TO,
+            replyTo: enquiry.email,
+            subject,
+            html: getEmailLayout(subject, content),
+        });
+
+        console.log(`✅ RFQ Lead notification sent to ${EMAIL_TO}`);
+    } catch (error) {
+        console.error('❌ Failed to send RFQ notification email:', error);
+    }
+};
+
+/**
+ * 2. Sends Order Notification when a customer places an order
+ * Sent to: sales.imagetechindustries@gmail.com, imagetechindustries@gmail.com & Customer
  */
 export const sendOrderPlacedEmail = async (user, order, invoiceBuffer = null) => {
-    if (!user || !user.email) return;
-
     try {
-        const itemRows = order.orderItems.map(item => `
+        const items = order.orderItems || [];
+        const itemRows = items.map((item, idx) => `
             <tr>
-                <td style="padding: 15px 0; border-bottom: 1px solid #f9f9f9; width: 65px;">
-                    <img src="${item.image}" alt="${item.name}" style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px; background-color: #f5f5f5;" />
+                <td style="padding: 10px 0; border-bottom: 1px solid #F1F5F9; vertical-align: middle;">
+                    <div style="font-weight: 700; color: #172B4D; font-size: 13.5px;">${idx + 1}. ${item.name || 'Dyne Test Item'}</div>
+                    <div style="color: #64748B; font-size: 11.5px; margin-top: 2px;">
+                        Qty: <strong>${item.qty || 1}</strong> × ${formatPrice(item.price)}
+                        ${item.size ? ` | Spec: ${item.size}` : ''}
+                    </div>
                 </td>
-                <td style="padding: 15px 15px; border-bottom: 1px solid #f9f9f9; vertical-align: middle;">
-                    <div style="font-weight: 600; color: #111; margin-bottom: 4px;">${item.name}</div>
-                    <div style="color: #777; font-size: 13px;">Qty: ${item.qty}</div>
-                </td>
-                <td style="padding: 15px 0; border-bottom: 1px solid #f9f9f9; text-align: right; vertical-align: middle; font-weight: 600; color: #111;">
-                    ${formatPrice(item.price)}
+                <td style="padding: 10px 0; border-bottom: 1px solid #F1F5F9; text-align: right; vertical-align: middle; font-weight: 700; color: #172B4D; font-size: 13.5px;">
+                    ${formatPrice((item.price || 0) * (item.qty || 1))}
                 </td>
             </tr>
         `).join('');
 
+        const orderIdStr = order._id.toString().slice(-8).toUpperCase();
+        const clientName = order.shippingAddress?.name || user?.name || 'Customer';
+        const clientPhone = order.shippingAddress?.phone || user?.phone || 'N/A';
+        const clientEmail = order.shippingAddress?.email || user?.email || 'N/A';
+
         const content = `
-            <h2 style="color: #111; font-size: 22px; font-weight: 600; margin-top: 0;">Thank you for your order!</h2>
-            <p style="margin-bottom: 25px;">Hi <strong>${user.name}</strong>,</p>
-            <p style="margin-bottom: 30px;">We're getting your order <strong>#${order._id}</strong> ready to be shipped. We will notify you when it has been sent.</p>
+            <div style="background-color: #EFF6FF; border-left: 4px solid #0D6EFD; padding: 14px 16px; border-radius: 8px; margin-bottom: 20px;">
+                <h2 style="color: #0D6EFD; font-size: 16px; margin: 0 0 4px 0; font-weight: 700;">📦 New Procurement Order Placed (#${orderIdStr})</h2>
+                <p style="margin: 0; color: #475569; font-size: 12.5px;">A new order has been logged on ImageTech Industries Portal.</p>
+            </div>
+
+            <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 13.5px;">
+                <tr>
+                    <td style="padding: 8px 0; border-bottom: 1px solid #F1F5F9; color: #64748B; width: 140px; font-weight: 600;">Customer Name:</td>
+                    <td style="padding: 8px 0; border-bottom: 1px solid #F1F5F9; color: #172B4D; font-weight: 700;">${clientName}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px 0; border-bottom: 1px solid #F1F5F9; color: #64748B; font-weight: 600;">Mobile Number:</td>
+                    <td style="padding: 8px 0; border-bottom: 1px solid #F1F5F9; color: #0D6EFD; font-weight: 700;">
+                        <a href="tel:${clientPhone}" style="color: #0D6EFD; text-decoration: none;">${clientPhone}</a>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px 0; border-bottom: 1px solid #F1F5F9; color: #64748B; font-weight: 600;">Email:</td>
+                    <td style="padding: 8px 0; border-bottom: 1px solid #F1F5F9; color: #172B4D; font-weight: 600;">
+                        <a href="mailto:${clientEmail}" style="color: #172B4D; text-decoration: none;">${clientEmail}</a>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px 0; border-bottom: 1px solid #F1F5F9; color: #64748B; font-weight: 600;">Delivery Address:</td>
+                    <td style="padding: 8px 0; border-bottom: 1px solid #F1F5F9; color: #172B4D;">
+                        ${order.shippingAddress?.address || 'N/A'}, ${order.shippingAddress?.city || ''} - ${order.shippingAddress?.postalCode || ''}
+                    </td>
+                </tr>
+                ${order.notes ? `
+                <tr>
+                    <td style="padding: 8px 0; border-bottom: 1px solid #F1F5F9; color: #64748B; font-weight: 600;">Order / GST Notes:</td>
+                    <td style="padding: 8px 0; border-bottom: 1px solid #F1F5F9; color: #172B4D;">${order.notes}</td>
+                </tr>` : ''}
+            </table>
             
-            <h3 style="color: #111; font-size: 16px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #111;">Order Summary</h3>
-            <table style="width: 100%; border-collapse: collapse; margin-bottom: 30px;">
+            <h3 style="color: #172B4D; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; padding-bottom: 4px; border-bottom: 2px solid #E2E8F0;">Ordered Products List</h3>
+            <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
                 <tbody>
                     ${itemRows}
                 </tbody>
                 <tfoot>
                     <tr>
-                        <td colspan="2" style="padding: 20px 15px 0 0; text-align: right; font-weight: 600; color: #555;">Subtotal:</td>
-                        <td style="padding: 20px 0 0 0; text-align: right; font-weight: 600; color: #111;">${formatPrice(order.totalPrice)}</td>
-                    </tr>
-                    <tr>
-                        <td colspan="2" style="padding: 10px 15px 0 0; text-align: right; font-weight: 700; font-size: 18px; color: #111;">Total:</td>
-                        <td style="padding: 10px 0 0 0; text-align: right; font-weight: 700; font-size: 18px; color: #cf7e28;">${formatPrice(order.totalPrice)}</td>
+                        <td style="padding: 12px 0 0 0; text-align: right; font-weight: 700; font-size: 15px; color: #172B4D;">Total Order Value:</td>
+                        <td style="padding: 12px 0 0 0; text-align: right; font-weight: 800; font-size: 17px; color: #0D6EFD;">${formatPrice(order.totalPrice)}</td>
                     </tr>
                 </tfoot>
             </table>
 
-            <div style="background-color: #fafafa; border-radius: 8px; padding: 20px; margin-bottom: 10px;">
-                <h3 style="color: #111; font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-top: 0; margin-bottom: 10px;">Shipping To</h3>
-                <p style="margin: 0; color: #555; line-height: 1.5; font-size: 14px;">
-                    ${order.shippingAddress.address}<br>
-                    ${order.shippingAddress.city}, ${order.shippingAddress.postalCode}<br>
-                    ${order.shippingAddress.country || 'India'}
-                </p>
+            <div style="text-align: center; margin-top: 24px;">
+                <a href="${process.env.CLIENT_URL || 'http://localhost:5173'}/admin" style="display: inline-block; background-color: #0D6EFD; color: #ffffff; text-decoration: none; padding: 11px 26px; border-radius: 8px; font-weight: 700; font-size: 13px;">Manage Order in Admin</a>
             </div>
-            
-            ${invoiceBuffer ? `<p style="margin-top: 20px; color: #cf7e28; font-weight: bold; font-size: 14px;">📄 Your official Tax Invoice is attached with this email.</p>` : ''}
         `;
 
         const mailOptions = {
-            from: `"Ownvibes" <${FROM_EMAIL}>`,
-            to: user.email,
-            bcc: ADMIN_EMAIL, // BCC admin on order placed
-            subject: `Order Confirmation - #${order._id}`,
+            from: FROM_HEADER,
+            to: EMAIL_TO, // Both imagetech admin emails receive full notification
+            cc: clientEmail !== 'N/A' ? clientEmail : undefined,
+            subject: `📦 [NEW ORDER] #${orderIdStr} - ${clientName} (${clientPhone}) - ₹${order.totalPrice}`,
             html: getEmailLayout(`Order Confirmation`, content),
         };
 
         if (invoiceBuffer) {
             mailOptions.attachments = [
                 {
-                    filename: `Invoice-${order.invoiceNumber || order._id}.pdf`,
+                    filename: `Invoice-${order.invoiceNumber || orderIdStr}.pdf`,
                     content: invoiceBuffer,
                     contentType: 'application/pdf'
                 }
@@ -139,99 +228,18 @@ export const sendOrderPlacedEmail = async (user, order, invoiceBuffer = null) =>
         }
 
         await transporter.sendMail(mailOptions);
-
-        console.log(`✅ Order Placed Email sent to ${user.email} (BCC: ${ADMIN_EMAIL}) with ${invoiceBuffer ? 'Invoice PDF' : 'no attachment'}`);
+        console.log(`✅ Order notification sent to ImageTech team (${EMAIL_TO}) and client (${clientEmail})`);
     } catch (error) {
         console.error(`❌ Failed to send Order Placed Email:`, error.message);
     }
 };
 
-/**
- * Sends the Order Shipped Email
- */
-export const sendOrderShippedEmail = async (user, order) => {
-    if (!user || !user.email) return;
+export const sendOrderShippedEmail = async (user, order) => {};
+export const sendOrderDeliveredEmail = async (user, order) => {};
 
-    try {
-        const trackingUpdate = order.trackingUpdates.slice().reverse().find(u => u.status === 'Shipped');
-        const trackingDetails = trackingUpdate?.description ? `<div style="background-color: #f0f7f4; border: 1px solid #d4ece3; border-radius: 6px; padding: 15px; margin: 25px 0;"><strong style="color: #2b7a5a;">Tracking Info:</strong> <span style="color: #3e9a74;">${trackingUpdate.description}</span></div>` : '';
-
-        const content = `
-            <div style="text-align: center; margin-bottom: 30px;">
-                <div style="background-color: #111; color: #fff; width: 60px; height: 60px; line-height: 60px; border-radius: 30px; font-size: 24px; margin: 0 auto 20px;">📦</div>
-                <h2 style="color: #111; font-size: 24px; font-weight: 700; margin-top: 0;">It's on the way!</h2>
-            </div>
-            
-            <p style="margin-bottom: 15px;">Hi <strong>${user.name}</strong>,</p>
-            <p style="margin-bottom: 25px;">Great news! Your order <strong>#${order._id}</strong> has been shipped and is currently making its way to you.</p>
-            
-            ${trackingDetails}
-
-            <div style="background-color: #fafafa; border-radius: 8px; padding: 20px; margin: 30px 0;">
-                <h3 style="color: #111; font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-top: 0; margin-bottom: 10px;">Shipping To</h3>
-                <p style="margin: 0; color: #555; line-height: 1.5; font-size: 14px;">
-                    ${order.shippingAddress.address}<br>
-                    ${order.shippingAddress.city}, ${order.shippingAddress.postalCode}<br>
-                    ${order.shippingAddress.country}
-                </p>
-            </div>
-
-            <div style="text-align: center; margin-top: 35px;">
-                <a href="${process.env.CLIENT_URL || 'http://localhost:5173'}/my-orders" style="display: inline-block; background-color: #111; color: #fff; text-decoration: none; padding: 14px 32px; border-radius: 30px; font-weight: 600; font-size: 15px; letter-spacing: 1px; text-transform: uppercase;">Track Order</a>
-            </div>
-        `;
-
-        await transporter.sendMail({
-            from: `"Ownvibes" <${FROM_EMAIL}>`,
-            to: user.email,
-            subject: `Your order #${order._id} has shipped!`,
-            html: getEmailLayout(`Order Shipped`, content),
-        });
-
-        console.log(`✅ Order Shipped Email sent to ${user.email}`);
-    } catch (error) {
-        console.error(`❌ Failed to send Order Shipped Email:`, error.message);
-    }
-};
-
-/**
- * Sends the Order Delivered Email
- */
-export const sendOrderDeliveredEmail = async (user, order) => {
-    if (!user || !user.email) return;
-
-    try {
-        const content = `
-            <div style="text-align: center; margin-bottom: 30px;">
-                <div style="background-color: #cf7e28; color: #fff; width: 60px; height: 60px; line-height: 60px; border-radius: 30px; font-size: 24px; margin: 0 auto 20px;">🎉</div>
-                <h2 style="color: #111; font-size: 24px; font-weight: 700; margin-top: 0;">Delivered!</h2>
-            </div>
-            
-            <p style="margin-bottom: 15px;">Hi <strong>${user.name}</strong>,</p>
-            <p style="margin-bottom: 25px;">Your order <strong>#${order._id}</strong> has been successfully delivered.</p>
-            
-            <p style="margin-bottom: 35px; font-size: 18px; color: #555; text-align: center; font-style: italic;">
-                "We hope you love your new Ownvibes apparel as much as we loved creating it for you."
-            </p>
-            
-            <div style="background-color: #fffaf0; border: 1px solid #f5eadb; border-radius: 8px; padding: 25px; text-align: center; margin: 30px 0;">
-                <h3 style="color: #cf7e28; margin-top: 0; font-size: 18px;">How did we do?</h3>
-                <p style="color: #666; font-size: 14px; margin-bottom: 20px;">Your feedback helps us improve and helps others make great choices.</p>
-                <a href="${process.env.CLIENT_URL || 'http://localhost:5173'}/my-orders" style="display: inline-block; background-color: #cf7e28; color: #fff; text-decoration: none; padding: 12px 28px; border-radius: 6px; font-weight: bold; font-size: 15px;">Leave a Review</a>
-            </div>
-
-            <p style="color: #888; font-size: 13px; text-align: center;">If you haven't received your package, please reply to this email to contact support immediately.</p>
-        `;
-
-        await transporter.sendMail({
-            from: `"Ownvibes" <${FROM_EMAIL}>`,
-            to: user.email,
-            subject: `Your order #${order._id} has been delivered!`,
-            html: getEmailLayout(`Order Delivered`, content),
-        });
-
-        console.log(`✅ Order Delivered Email sent to ${user.email}`);
-    } catch (error) {
-        console.error(`❌ Failed to send Order Delivered Email:`, error.message);
-    }
+export default {
+    sendEnquiryNotificationEmail,
+    sendOrderPlacedEmail,
+    sendOrderShippedEmail,
+    sendOrderDeliveredEmail
 };

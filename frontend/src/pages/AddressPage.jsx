@@ -199,45 +199,32 @@ const AddressPage = () => {
         setError('');
         setSubmitting(true);
 
+        const currentAddress = {
+            ...formData,
+            _id: editingAddressId || `addr_${Date.now()}`
+        };
+
+        // Always save to localStorage so checkout never blocks
+        localStorage.setItem('shippingAddress', JSON.stringify(currentAddress));
+
         try {
-            if (editingAddressId) {
-                // Update existing address
-                const { data } = await axios.put(`${API_BASE_URL}/auth/addresses/${editingAddressId}`, formData, {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
-
-                const updatedList = data.addresses || [];
-                setAddresses(updatedList);
-                const edited = updatedList.find(a => a._id === editingAddressId) || formData;
-                setSelectedAddressId(editingAddressId);
-                localStorage.setItem('shippingAddress', JSON.stringify(edited));
-                setIsAddingNew(false);
-                setEditingAddressId(null);
-            } else {
-                // Add brand new address
-                const { data } = await axios.post(`${API_BASE_URL}/auth/addresses`, formData, {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
-
-                const updatedList = data.addresses || [];
-                setAddresses(updatedList);
-
-                const newlyAdded = data.address || updatedList[updatedList.length - 1] || formData;
-                setSelectedAddressId(newlyAdded._id);
-                localStorage.setItem('shippingAddress', JSON.stringify(newlyAdded));
-
-                // Direct to payment immediately with newly created address
-                navigate('/checkout/payment');
-                return;
+            if (token) {
+                if (editingAddressId) {
+                    await axios.put(`${API_BASE_URL}/auth/addresses/${editingAddressId}`, formData, {
+                        headers: { Authorization: `Bearer ${token}` }
+                    }).catch(e => console.warn('API sync warning:', e.message));
+                } else {
+                    await axios.post(`${API_BASE_URL}/auth/addresses`, formData, {
+                        headers: { Authorization: `Bearer ${token}` }
+                    }).catch(e => console.warn('API sync warning:', e.message));
+                }
             }
+
+            // Unconditionally proceed to payment
+            navigate('/checkout/payment');
         } catch (err) {
-            console.error('Failed to save address:', err);
-            setError(err.response?.data?.message || 'Failed to save address');
-            // If offline/error, still allow proceeding via localStorage
-            if (!token) {
-                localStorage.setItem('shippingAddress', JSON.stringify(formData));
-                navigate('/checkout/payment');
-            }
+            console.warn('Address sync exception, continuing via localStorage:', err);
+            navigate('/checkout/payment');
         } finally {
             setSubmitting(false);
         }
@@ -245,7 +232,7 @@ const AddressPage = () => {
 
     return (
         <div className="min-h-[calc(100vh-80px)] bg-[#fdfaf7] flex items-start justify-center px-4 pt-10 pb-20 font-sans">
-            <SEO title="Delivery Address | Ownvibes" noindex={true} />
+            <SEO title="Delivery & Billing Address | ImageTech Industries" noindex={true} />
             <div className="max-w-2xl w-full">
                 {/* Back button */}
                 <button

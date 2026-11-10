@@ -26,16 +26,16 @@ const OffersPage = () => {
     const collectionSchema = {
         "@context": "https://schema.org",
         "@type": "CollectionPage",
-        "name": "Ownvibes Offers & Coupons",
-        "description": "Discover our latest promotions and discount codes to save on your favorite premium t-shirts.",
-        "url": "https://www.ownvibes.in/offers"
+        "name": "ImageTech Commercial Offers",
+        "description": "Discover our latest bulk procurement promotions and volume discount codes.",
+        "url": "https://www.imagetechindustries.com/offers"
     };
 
     return (
-        <div className="pt-8 pb-20 min-h-screen bg-[#fdfaf7] font-sans">
+        <div className="pt-8 pb-20 min-h-screen bg-[#F5F8FC] font-sans">
             <SEO 
-                title="Exclusive Offers & Coupons" 
-                description="Discover our latest promotions and discount codes to save on your favorite premium t-shirts."
+                title="Commercial Offers & Volume Discounts | ImageTech Industries" 
+                description="Discover our latest industrial promotions and volume discount codes for Dyne Pens, Inks, and Doctor Blades."
                 schema={[collectionSchema]} 
             />
             <div className="container-custom px-4 max-w-5xl mx-auto">

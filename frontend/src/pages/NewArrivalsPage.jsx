@@ -93,16 +93,16 @@ const NewArrivalsPage = () => {
     const collectionSchema = {
         "@context": "https://schema.org",
         "@type": "CollectionPage",
-        "name": "Ownvibes New Arrivals",
-        "description": "Check out our latest collection of new t-shirts.",
-        "url": "https://www.ownvibes.in/new-arrivals"
+        "name": "ImageTech New Arrivals",
+        "description": "Check out our latest industrial testing equipment, dyne inks, and doctor blades.",
+        "url": "https://www.imagetechindustries.com/new-arrivals"
     };
 
     return (
-        <div className="bg-[#fdfdfc] min-h-screen font-sans">
+        <div className="bg-[#F5F8FC] min-h-screen font-sans">
             <SEO
-                title="New Arrivals"
-                description="Check out our latest collection of new t-shirts."
+                title="New Arrivals | ImageTech Industries"
+                description="Check out our latest industrial testing equipment, dyne inks, and doctor blades."
                 schema={[collectionSchema, itemListSchema]}
             />
             {/* Premium Full-Width Header */}

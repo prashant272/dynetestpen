@@ -1,0 +1,14 @@
+services:
+  imagetech-backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: imagetech_backend
+    restart: always
+    ports:
+      - "5002:5000"
+    env_file:
+      - ./backend/.env
+    environment:
+      - PORT=5000
+      - NODE_ENV=production

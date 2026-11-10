@@ -1,19 +1,18 @@
 import express from 'express';
 import {
-    getProducts,
-    getProductById,
-    createProduct,
-    updateProduct,
-    deleteProduct,
-    incrementProductView,
-    toggleProductLike,
+  getProducts,
+  getProductBySlug,
+  createProduct,
+  updateProduct,
+  deleteProduct
 } from '../controllers/productController.js';
 
 const router = express.Router();
 
-router.route('/').get(getProducts).post(createProduct);
-router.route('/:id').get(getProductById).put(updateProduct).delete(deleteProduct);
-router.route('/:id/view').post(incrementProductView);
-router.route('/:id/like').post(toggleProductLike);
+router.get('/', getProducts);
+router.get('/:slug', getProductBySlug);
+router.post('/', createProduct); // In production, add admin auth middleware here
+router.put('/:id', updateProduct);
+router.delete('/:id', deleteProduct);
 
 export default router;

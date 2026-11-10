@@ -1,818 +1,639 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import axios from 'axios';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
-import { Heart, Star, ChevronDown, ChevronRight, Filter, ChevronLeft, LayoutGrid, Shirt, Ghost, Cat, Crown, ShoppingBag, X, Leaf, Wind, Diamond, ArrowRight, List, ShoppingCart, RotateCcw, SlidersHorizontal } from 'lucide-react';
+import { 
+    Filter, ArrowRight, ShoppingCart, RotateCcw, SlidersHorizontal, 
+    Layers, ShieldCheck, CheckCircle2, ChevronDown, FileText, Search, X
+} from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
-import { API_BASE_URL } from '../api';
+import { PRODUCTS_API_URL } from '../api';
 import { useCart } from '../contexts/CartContext';
 import { useWishlist } from '../contexts/WishlistContext';
-import teddyBanner from '../assets/teddy_banner1.png';
 import SEO from '../components/SEO';
 import ProductSkeleton from '../components/skeletons/ProductSkeleton';
-import CategorySkeleton from '../components/skeletons/CategorySkeleton';
-import BottomSheet from '../components/common/BottomSheet';
-
-const ShopProductCard = ({ product }) => {
-    const { _id, slug, name, price, images, rating = 4.8 } = product;
-    const { addToCart } = useCart();
-    const { toggleWishlist, isInWishlist } = useWishlist();
-    const navigate = useNavigate();
-
-    const handleAddToCart = (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        addToCart({ ...product, selectedSize: product.sizes?.[0] || 'M' }, 1);
-    };
-
-    // Simulate original price & discount
-    const originalPrice = price === 699 ? 1299 : price === 698 ? 1299 : price + Math.floor(price * 0.86);
-    const discount = Math.round(((originalPrice - price) / originalPrice) * 100);
-
-    // Simulate New vs Bestseller for variety
-    const isNew = _id.charCodeAt(0) % 2 === 0;
-
-    return (
-        <div className="bg-white rounded-[20px] overflow-hidden border border-gray-100 flex flex-col group transition-shadow hover:shadow-lg hover:shadow-black/5 h-full">
-            <div className="relative h-56 bg-gray-100 flex items-center justify-center overflow-hidden">
-                {/* Tags */}
-                <div className="absolute top-3 left-3 z-10">
-                    {isNew ? (
-                        <span className="bg-gray-600 text-white text-[10px] font-bold px-3 py-1.5 rounded-full uppercase tracking-wider">New</span>
-                    ) : (
-                        <span className="bg-[#b58145] text-white text-[10px] font-bold px-3 py-1.5 rounded-full uppercase tracking-wider">Bestseller</span>
-                    )}
-                </div>
-
-                {/* Wishlist */}
-                <button
-                    onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        toggleWishlist(product);
-                    }}
-                    className="absolute top-3 right-3 z-10 p-2 bg-white rounded-full shadow-sm hover:shadow transition-all"
-                >
-                    <Heart size={16} className={isInWishlist(product._id || product.id) ? "text-red-500 fill-red-500" : "text-gray-400 hover:text-red-500"} />
-                </button>
-
-                <Link to={`/product/${slug || _id}`} className="w-full h-full relative block overflow-hidden">
-                    <img
-                        src={images && images[0] ? encodeURI(images[0]) : 'https://via.placeholder.com/300'}
-                        alt={name}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                        loading="lazy" decoding="async" />
-                </Link>
-            </div>
-
-            <div className="p-5 flex flex-col gap-2 flex-1 bg-white">
-                <Link to={`/product/${slug || _id}`}>
-                    <h3 className="font-extrabold text-[#1c1c1c] text-[14px] leading-tight line-clamp-1">{name}</h3>
-                </Link>
-
-                <div className="flex items-center gap-1 mt-0.5 mb-1">
-                    <Star size={12} className="text-[#cf7e28] fill-[#cf7e28]" />
-                    <Star size={12} className="text-[#cf7e28] fill-[#cf7e28]" />
-                    <Star size={12} className="text-[#cf7e28] fill-[#cf7e28]" />
-                    <Star size={12} className="text-[#cf7e28] fill-[#cf7e28]" />
-                    <Star size={12} className="text-gray-200 fill-gray-200" />
-                    <span className="text-[11px] text-gray-400 ml-1 font-bold">(0)</span>
-                </div>
-
-                <div className="flex flex-col mt-auto pt-2 gap-4">
-                    <div className="flex items-center gap-2">
-                        <span className="text-lg font-black text-[#1c1c1c]">₹{price}</span>
-                        <span className="text-[11px] font-bold text-gray-400 line-through mt-1">₹{originalPrice}</span>
-                        <span className="text-[11px] font-bold text-[#cf7e28] ml-auto mt-1">{discount}% OFF</span>
-                    </div>
-                    <button
-                        onClick={handleAddToCart}
-                        className="w-full bg-[#1c1c1c] hover:bg-black text-white font-bold py-3 rounded-[12px] text-[12px] transition-all flex items-center justify-center gap-2 shadow-sm group-hover:shadow-md"
-                    >
-                        <ShoppingCart size={14} /> Add to Cart
-                    </button>
-                </div>
-            </div>
-        </div>
-    );
-};
+import ProductCard from '../components/ProductCard';
+import RequestQuoteModal from '../components/common/RequestQuoteModal';
+import { IMAGETECH_FEATURED_PRODUCTS, INDUSTRIAL_CATEGORIES, ALL_DYNE_PRODUCTS } from '../data/industrialData';
 
 const Shop = () => {
-    // Pagination state
     const [currentPage, setCurrentPage] = useState(1);
-    const productsPerPage = 8;
+    const productsPerPage = 9;
 
-    // Filters state
-    const [priceRange, setPriceRange] = useState(5999);
-    const [selectedPriceRanges, setSelectedPriceRanges] = useState([]);
-    const [selectedAges, setSelectedAges] = useState([]);
-    const [selectedSizes, setSelectedSizes] = useState([]);
-    const [selectedCollections, setSelectedCollections] = useState([]);
+    const [selectedCategory, setSelectedCategory] = useState('All');
+    const [selectedSubcategory, setSelectedSubcategory] = useState('All');
+    const [selectedDynes, setSelectedDynes] = useState([]);
     const [inStockOnly, setInStockOnly] = useState(false);
-    const [sortOption, setSortOption] = useState('Popularity');
+    const [sortBy, setSortBy] = useState('featured');
+    const [isQuoteOpen, setIsQuoteOpen] = useState(false);
     const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
-    const handleCloseMobileFilter = useCallback(() => {
-        setIsMobileFilterOpen(false);
-    }, []);
-
-    const scrollContainerRef = useRef(null);
-
-    const scrollRight = () => {
-        if (scrollContainerRef.current) {
-            scrollContainerRef.current.scrollBy({ left: 300, behavior: 'smooth' });
-        }
-    };
 
     const location = useLocation();
     const navigate = useNavigate();
 
-    const searchParams = new URLSearchParams(location.search);
-    const selectedCategory = searchParams.get('category') || 'All';
-    const searchQuery = searchParams.get('search') || '';
+    // Query parameters
+    useEffect(() => {
+        const searchParams = new URLSearchParams(location.search);
+        const cat = searchParams.get('category');
+        if (cat) {
+            setSelectedCategory(cat);
+        } else {
+            setSelectedCategory('All');
+        }
+        
+        const subcat = searchParams.get('subcategory');
+        if (subcat) {
+            setSelectedSubcategory(subcat);
+        } else {
+            setSelectedSubcategory('All');
+        }
 
-    // React Query for Products
-    const { data: products = [], isLoading: isProductsLoading } = useQuery({
+        const search = searchParams.get('search');
+        if (search) setSearchQuery(search);
+    }, [location.search]);
+
+    const [searchQuery, setSearchQuery] = useState('');
+
+    // Fetch database products
+    const { data: dbProducts = [], isLoading } = useQuery({
         queryKey: ['products'],
         queryFn: async () => {
-            const res = await axios.get(`${API_BASE_URL}/products`);
-            return res.data;
-        },
-        staleTime: 5 * 60 * 1000,
-    });
-
-    // React Query for Categories
-    const { data: categoriesList = [], isLoading: isCategoriesLoading } = useQuery({
-        queryKey: ['categories'],
-        queryFn: async () => {
-            const res = await axios.get(`${API_BASE_URL}/categories`);
-            return res.data;
-        },
-        staleTime: 5 * 60 * 1000,
-    });
-
-    const priceFilters = ['Under ₹500', '₹500 - ₹1000', '₹1000 - ₹2000', '₹2000 - ₹5000', 'Above ₹5000'];
-    const sizeFilters = ['S', 'M', 'L', 'XL', 'XXL', '3XL'];
-
-    // Helper to pick an icon based on category name
-    const getCategoryIcon = (name) => {
-        const lower = name.toLowerCase();
-        if (lower.includes('teddy') || lower.includes('plush')) return <Cat size={18} strokeWidth={1.5} />;
-        if (lower.includes('unicorn') || lower.includes('magic')) return <Crown size={18} strokeWidth={1.5} />;
-        if (lower.includes('cartoon') || lower.includes('character')) return <Ghost size={18} strokeWidth={1.5} />;
-        if (lower.includes('shirt') || lower.includes('tee') || lower.includes('oversize')) return <Shirt size={18} strokeWidth={1.5} />;
-        return <ShoppingBag size={18} strokeWidth={1.5} />;
-    };
-
-    // Handle Checkbox toggles
-    const handleToggle = (setter, state, value) => {
-        setter(state.includes(value) ? state.filter(i => i !== value) : [...state, value]);
-    };
-
-    // Sort categories newest first
-    const sortedCategories = useMemo(() => {
-        return [...categoriesList].sort((a, b) => {
-            if (a.createdAt && b.createdAt) {
-                return new Date(b.createdAt) - new Date(a.createdAt);
+            try {
+                const res = await axios.get(`${PRODUCTS_API_URL}/products`);
+                return Array.isArray(res.data) ? res.data : (res.data.products || []);
+            } catch {
+                return [];
             }
-            return 0; // fallback
-        });
-    }, [categoriesList]);
+        },
+        staleTime: 1000 * 60 * 15,
+    });
 
-    // Calculate filtered products using useMemo
+    // Filter products strictly to Category: "Dyne Test Pen" containing "Dyne Test Pen" and "Dyne Test Pen Ink"
+    const allProducts = useMemo(() => {
+        const rawList = (dbProducts && dbProducts.length > 0) ? dbProducts : [];
+        
+        // Filter strictly for Dyne Test Pen category items
+        const dyneItems = rawList.filter(p => {
+            const catName = typeof p.category === 'object' ? p.category?.name : (p.category || '');
+            const subName = typeof p.subcategory === 'object' ? p.subcategory?.name : (p.subcategory || '');
+            const title = p.title || p.name || '';
+            return (
+                catName === 'Dyne Test Pen' ||
+                subName === 'Dyne Test Pen' ||
+                subName === 'Dyne Test Pen Ink' ||
+                title.toLowerCase().includes('dyne test pen') ||
+                title.toLowerCase().includes('dyne test ink')
+            );
+        }).map(p => ({
+            ...p,
+            _id: p._id || p.id,
+            name: p.title || p.name,
+            title: p.title || p.name,
+            slug: p.slug,
+            category: 'Dyne Test Pen',
+            subcategory: typeof p.subcategory === 'object' ? p.subcategory?.name : (p.subcategory || (p.title?.toLowerCase().includes('ink') ? 'Dyne Test Pen Ink' : 'Dyne Test Pen')),
+            images: Array.isArray(p.images) && p.images.length > 0 ? p.images : ['https://pub-2343d84e533742e08719e1d3d8c0a3d6.r2.dev/products/a9b2386377ae5a2a8ddfb3070f83f195.webp'],
+            price: p.price > 0 ? p.price :0,
+            displayPrice: p.price > 0 ? `₹${p.price}` : 'Price on Request',
+            description: p.shortDesc || (typeof p.longDesc === 'string' ? p.longDesc.replace(/<[^>]*>?/gm, '').slice(0, 160) : 'Industrial surface testing and treatment verification solution.'),
+            inStock: true
+        }));
+
+        if (dyneItems.length > 0) {
+            return dyneItems;
+        }
+
+        return ALL_DYNE_PRODUCTS;
+    }, [dbProducts]);
+
+    const dyneOptions = ['28 Dyne/cm', '30 Dyne/cm', '32 Dyne/cm', '34 Dyne/cm', '38 Dyne/cm', '42 Dyne/cm'];
+
+    // Filter Logic
     const filteredProducts = useMemo(() => {
-        let updated = [...products];
+        let result = [...allProducts];
 
-        // Search query filter
-        if (searchQuery) {
-            const lowerQuery = searchQuery.toLowerCase();
-            updated = updated.filter(p =>
-                p.name.toLowerCase().includes(lowerQuery) ||
-                (p.description && p.description.toLowerCase().includes(lowerQuery))
+        if (searchQuery.trim()) {
+            const query = searchQuery.toLowerCase();
+            result = result.filter(p => 
+                (p.name && p.name.toLowerCase().includes(query)) ||
+                (p.description && p.description.toLowerCase().includes(query)) ||
+                (p.category && p.category.toLowerCase().includes(query))
             );
         }
 
-        // Category filter
         if (selectedCategory !== 'All') {
-            updated = updated.filter(p => p.category?.toLowerCase() === selectedCategory.toLowerCase());
+            result = result.filter(p => 
+                p.category && p.category.toLowerCase() === selectedCategory.toLowerCase()
+            );
         }
 
-        if (selectedPriceRanges.length > 0) {
-            updated = updated.filter(p => {
-                return selectedPriceRanges.some(range => {
-                    if (range === 'Under ₹500') return p.price < 500;
-                    if (range === '₹500 - ₹1000') return p.price >= 500 && p.price <= 1000;
-                    if (range === '₹1000 - ₹2000') return p.price >= 1000 && p.price <= 2000;
-                    if (range === '₹2000 - ₹5000') return p.price >= 2000 && p.price <= 5000;
-                    if (range === 'Above ₹5000') return p.price > 5000;
-                    return false;
-                });
+        if (selectedSubcategory !== 'All') {
+            result = result.filter(p => {
+                const subName = typeof p.subcategory === 'object' ? p.subcategory?.name : p.subcategory;
+                if (subName && subName.toLowerCase() === selectedSubcategory.toLowerCase()) return true;
+                // fallback matching for title if subcategory wasn't explicitly populated
+                if (selectedSubcategory === 'Dyne Test Pen' && p.name && p.name.toLowerCase().includes('pen')) return true;
+                if (selectedSubcategory === 'Dyne Test Pen Ink' && p.name && p.name.toLowerCase().includes('ink')) return true;
+                return false;
             });
         }
 
-        // For sizes (array of strings in DB)
-        if (selectedSizes.length > 0) {
-            updated = updated.filter(p => {
-                if (!p.sizes || !Array.isArray(p.sizes)) return false;
-                return p.sizes.some(productSize =>
-                    selectedSizes.some(selectedSize => productSize.toLowerCase() === selectedSize.toLowerCase())
-                );
+        if (selectedDynes.length > 0) {
+            result = result.filter(p => {
+                return selectedDynes.some(d => (p.name || '').includes(d.split(' ')[0]));
             });
         }
 
-        // Collections
-        if (selectedCollections.includes('New Arrivals')) {
-            updated = updated.filter(p => p.isNewArrival);
-        }
-        if (selectedCollections.includes('Best Sellers')) {
-            updated = updated.filter(p => p.isBestSeller);
+        if (sortBy === 'price-asc') {
+            result.sort((a, b) => (a.price || 0) - (b.price || 0));
+        } else if (sortBy === 'price-desc') {
+            result.sort((a, b) => (b.price || 0) - (a.price || 0));
         }
 
-        // Availability
-        if (inStockOnly) {
-            updated = updated.filter(p => p.stock > 0);
-        }
+        return result;
+    }, [allProducts, searchQuery, selectedCategory, selectedSubcategory, selectedDynes, sortBy]);
 
-        // Apply slider filter
-        updated = updated.filter(p => p.price <= priceRange);
-
-        // Sorting
-        if (sortOption === 'Price: Low to High') {
-            updated.sort((a, b) => a.price - b.price);
-        } else if (sortOption === 'Price: High to Low') {
-            updated.sort((a, b) => b.price - a.price);
-        } else if (sortOption === 'Newest First') {
-            updated.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-        } else {
-            // Popularity (default)
-            updated.sort((a, b) => (b.views || 0) - (a.views || 0));
-        }
-
-        return updated;
-    }, [products, selectedCategory, searchQuery, selectedPriceRanges, selectedSizes, selectedCollections, inStockOnly, priceRange, sortOption]);
-
-    // Reset pagination when filters change
-    useEffect(() => {
-        setCurrentPage(1);
-    }, [selectedCategory, searchQuery, selectedPriceRanges, selectedSizes, selectedCollections, inStockOnly, priceRange, sortOption]);
-
-    // Calculate pagination slices
-    const indexOfLastProduct = currentPage * productsPerPage;
-    const indexOfFirstProduct = indexOfLastProduct - productsPerPage;
-    const currentProducts = filteredProducts.slice(indexOfFirstProduct, indexOfLastProduct);
+    // Pagination
     const totalPages = Math.ceil(filteredProducts.length / productsPerPage);
-
-    const handleCategoryClick = (cat) => {
-        const params = new URLSearchParams(location.search);
-        if (cat === 'All') {
-            params.delete('category');
-        } else {
-            params.set('category', cat);
-        }
-        navigate(`/shop?${params.toString()}`);
-    };
-
-    const itemListSchema = {
-        "@context": "https://schema.org",
-        "@type": "ItemList",
-        "itemListElement": currentProducts.map((product, index) => ({
-            "@type": "ListItem",
-            "position": index + 1,
-            "url": `https://www.ownvibes.in/product/${product.slug || product._id}`
-        }))
-    };
-
-    const collectionSchema = {
-        "@context": "https://schema.org",
-        "@type": "CollectionPage",
-        "name": "Shop All Premium T-shirts",
-        "description": "Browse Ownvibes's full collection of t-shirts, graphic tees, and premium t-shirts.",
-        "url": "https://www.ownvibes.in/shop"
-    };
+    const paginatedProducts = filteredProducts.slice(
+        (currentPage - 1) * productsPerPage,
+        currentPage * productsPerPage
+    );
 
     return (
-        <div className="bg-[#fdfdfc] min-h-screen pt-4 pb-20 font-sans">
+        <main className="pt-8 pb-20 min-h-screen bg-[#F5F8FC] font-sans">
             <SEO
-                title="Shop All Premium T-shirts"
-                description="Browse Ownvibes's full collection of t-shirts, graphic tees, and premium t-shirts."
-                schema={[collectionSchema, itemListSchema]}
+                title="Industrial Product Catalogue | Dyne Test pen and Dyne test Ink"
+                description="Explore ImageTech Industries complete range of MAGNET Dyne Test Pens (28 to 72 Dyne/cm), ASTM D2578 Dyne Test Inks, Doctor Blades, and testing equipment."
             />
-            <div className="max-w-[1400px] mx-auto px-4 md:px-8">
 
-                <div className="flex flex-col lg:flex-row gap-8">
+            <div className="max-w-[1400px] mx-auto px-2 sm:px-4 md:px-8">
+                
+                {/* Clean Industrial Header Strip */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8 pb-4 sm:pb-5 border-b border-[#DCE5EF]">
+                    <div>
+                        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-[#0B3B6F] tracking-tight">
+                            All Products
+                        </h1>
+                    </div>
 
-                    {/* Left Sidebar (Desktop Only) */}
-                    <aside className="hidden lg:block lg:w-[260px] flex-shrink-0 space-y-8">
+                    <div className="flex items-center gap-2.5 w-full sm:w-auto">
+                        {/* Mobile Filter Button (visible only on mobile/tablet) */}
+                        <button
+                            onClick={() => setIsMobileFilterOpen(true)}
+                            className="lg:hidden flex-1 sm:flex-none bg-white hover:bg-gray-50 text-[#0B3B6F] font-bold text-xs px-4 py-3 rounded-xl transition-all shadow-xs border border-[#DCE5EF] inline-flex items-center justify-center gap-2 shrink-0 cursor-pointer active:scale-95"
+                        >
+                            <SlidersHorizontal size={15} className="text-[#0B3B6F]" />
+                            <span>Filters</span>
+                            {(selectedCategory !== 'All' || selectedSubcategory !== 'All' || selectedDynes.length > 0) && (
+                                <span className="w-2 h-2 rounded-full bg-[#0D6EFD]" />
+                            )}
+                        </button>
 
-                        {/* Categories Box */}
-                        <div className="bg-white rounded-[20px] p-6 shadow-sm border border-gray-100">
-                            <h3 className="font-extrabold text-[16px] text-[#1c1c1c] mb-5">Categories</h3>
-                            <ul className="space-y-2 max-h-[300px] overflow-y-auto pr-2 hide-scrollbar">
-                                <li
-                                    onClick={() => handleCategoryClick('All')}
-                                    className={`cursor-pointer text-[14px] flex items-center gap-3 px-4 py-3 rounded-[12px] transition-colors ${selectedCategory === 'All' ? 'bg-[#f8f5f0] text-black font-extrabold' : 'text-gray-600 font-medium hover:bg-gray-50'}`}
-                                >
-                                    <LayoutGrid size={18} strokeWidth={1.5} className={selectedCategory === 'All' ? 'text-[#b58145]' : 'text-gray-400'} />
-                                    All Categories
-                                </li>
-                                {isCategoriesLoading ? (
-                                    <>
-                                        <CategorySkeleton />
-                                        <CategorySkeleton />
-                                        <CategorySkeleton />
-                                        <CategorySkeleton />
-                                    </>
-                                ) : (
-                                    sortedCategories.map(cat => (
-                                        <li
-                                            key={cat._id || cat.name}
-                                            onClick={() => handleCategoryClick(cat.name)}
-                                            className={`cursor-pointer text-[14px] flex items-center gap-3 px-4 py-3 rounded-[12px] transition-colors ${selectedCategory === cat.name ? 'bg-[#f8f5f0] text-black font-extrabold' : 'text-gray-600 font-medium hover:bg-gray-50'}`}
-                                        >
-                                            <div className={selectedCategory === cat.name ? 'text-[#b58145]' : 'text-gray-400'}>
-                                                {getCategoryIcon(cat.name)}
-                                            </div>
-                                            {cat.name}
-                                        </li>
-                                    ))
-                                )}
-                            </ul>
+                        <button
+                            onClick={() => setIsQuoteOpen(true)}
+                            className="flex-1 sm:flex-none bg-[#FFC107] hover:bg-[#e0a800] text-[#0B3B6F] font-black text-xs sm:text-sm px-4 sm:px-5 py-3 rounded-xl transition-all shadow-xs hover:shadow-md active:scale-95 inline-flex items-center justify-center gap-2 border border-yellow-500/30 shrink-0 cursor-pointer"
+                        >
+                            <FileText size={16} className="text-[#0B3B6F]" />
+                            <span>Request Bulk RFQ</span>
+                        </button>
+                    </div>
+                </div>
+
+                {/* Mobile Quick Category Horizontal Pills */}
+                <div className="lg:hidden flex items-center gap-2 overflow-x-auto pb-4 mb-4 hide-scrollbar">
+                    <button
+                        onClick={() => {
+                            setSelectedCategory('All');
+                            setSelectedSubcategory('All');
+                            navigate('/shop');
+                        }}
+                        className={`text-xs px-3.5 py-2 rounded-xl font-bold whitespace-nowrap transition-all shadow-2xs ${
+                            selectedCategory === 'All' && selectedSubcategory === 'All'
+                                ? 'bg-[#0B3B6F] text-white ring-2 ring-[#0B3B6F]/20'
+                                : 'bg-white text-gray-700 border border-[#DCE5EF]'
+                        }`}
+                    >
+                        All ({allProducts.length})
+                    </button>
+                    <button
+                        onClick={() => {
+                            setSelectedCategory('Dyne Test Pen');
+                            setSelectedSubcategory('Dyne Test Pen');
+                            navigate(`/shop?category=${encodeURIComponent('Dyne Test Pen')}&subcategory=${encodeURIComponent('Dyne Test Pen')}`);
+                        }}
+                        className={`text-xs px-3.5 py-2 rounded-xl font-bold whitespace-nowrap transition-all shadow-2xs ${
+                            selectedCategory === 'Dyne Test Pen' && selectedSubcategory === 'Dyne Test Pen'
+                                ? 'bg-[#0B3B6F] text-white ring-2 ring-[#0B3B6F]/20'
+                                : 'bg-white text-gray-700 border border-[#DCE5EF]'
+                        }`}
+                    >
+                        Dyne Test Pen (22)
+                    </button>
+                    <button
+                        onClick={() => {
+                            setSelectedCategory('Dyne Test Pen');
+                            setSelectedSubcategory('Dyne Test Pen Ink');
+                            navigate(`/shop?category=${encodeURIComponent('Dyne Test Pen')}&subcategory=${encodeURIComponent('Dyne Test Pen Ink')}`);
+                        }}
+                        className={`text-xs px-3.5 py-2 rounded-xl font-bold whitespace-nowrap transition-all shadow-2xs ${
+                            selectedCategory === 'Dyne Test Pen' && selectedSubcategory === 'Dyne Test Pen Ink'
+                                ? 'bg-[#0B3B6F] text-white ring-2 ring-[#0B3B6F]/20'
+                                : 'bg-white text-gray-700 border border-[#DCE5EF]'
+                        }`}
+                    >
+                        Dyne Test Ink (23)
+                    </button>
+                </div>
+
+                {/* Main Catalogue Grid Layout */}
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                    
+                    {/* Left Sidebar Filters (3 cols) - Sticky under navbar so it locks and stays in screen */}
+                    <div className="hidden lg:block lg:col-span-3 sticky top-[165px] bg-white p-5 rounded-2xl border border-[#DCE5EF] shadow-xs space-y-4">
+                        
+                        <div className="flex items-center justify-between pb-2.5 border-b border-gray-100">
+                            <span className="text-xs font-bold text-[#172B4D] uppercase tracking-wider flex items-center gap-1.5">
+                                <Filter size={14} /> Technical Filters
+                            </span>
+                            <button
+                                onClick={() => {
+                                    setSelectedCategory('All');
+                                    setSelectedDynes([]);
+                                    setSearchQuery('');
+                                    navigate('/shop');
+                                }}
+                                className="text-[11px] text-[#0D6EFD] hover:underline font-semibold"
+                            >
+                                Reset All
+                            </button>
                         </div>
 
-                        {/* Filter Section */}
-                        <div className="bg-white rounded-[20px] p-6 shadow-sm border border-gray-100">
-                            <div className="flex items-center justify-between mb-6">
-                                <h3 className="font-extrabold text-[16px] text-[#1c1c1c]">Filter By</h3>
+                        {/* Category Filter */}
+                        <div>
+                            <h4 className="text-[11px] font-black text-[#0B3B6F] uppercase tracking-wider mb-2">
+                                Product Division
+                            </h4>
+                            <div className="space-y-1 text-xs">
                                 <button
                                     onClick={() => {
-                                        setSelectedPriceRanges([]);
-                                        setSelectedSizes([]);
-                                        setSelectedCollections([]);
-                                        setInStockOnly(false);
-                                        setPriceRange(5999);
+                                        setSelectedCategory('All');
+                                        setSelectedSubcategory('All');
+                                        navigate('/shop');
                                     }}
-                                    className="text-[12px] font-bold text-gray-500 hover:text-black transition-colors"
+                                    className={`w-full text-left px-2.5 py-1.5 rounded-lg font-bold transition-all flex items-center justify-between ${
+                                        selectedCategory === 'All' && selectedSubcategory === 'All'
+                                            ? 'bg-[#0B3B6F] text-white shadow-xs' 
+                                            : 'text-[#172B4D] hover:bg-[#F5F8FC] border border-transparent hover:border-gray-200'
+                                    }`}
                                 >
-                                    Clear All
+                                    <span>All Dyne Products</span>
+                                    <span className={`text-[10px] font-extrabold px-1.5 py-0.5 rounded-full ${
+                                        selectedCategory === 'All' && selectedSubcategory === 'All' ? 'bg-white/20 text-white' : 'bg-gray-100 text-[#0B3B6F]'
+                                    }`}>
+                                        {allProducts.length}
+                                    </span>
                                 </button>
-                            </div>
 
-                            {/* Price Filter */}
-                            <div className="mb-8">
-                                <div className="flex justify-between items-center mb-3 cursor-pointer">
-                                    <h4 className="font-bold text-[13px] text-[#1c1c1c]">Price</h4>
-                                    <ChevronDown size={14} className="text-[#b58145]" />
-                                </div>
-                                <div className="space-y-2.5">
-                                    {priceFilters.map(filter => (
-                                        <label key={filter} className="flex items-center gap-3 cursor-pointer group">
-                                            <input
-                                                type="checkbox"
-                                                className="w-4 h-4 rounded border-gray-400 text-black focus:ring-black accent-black"
-                                                checked={selectedPriceRanges.includes(filter)}
-                                                onChange={() => handleToggle(setSelectedPriceRanges, selectedPriceRanges, filter)}
-                                            />
-                                            <span className="text-[14px] text-gray-800 font-bold group-hover:text-black">{filter}</span>
-                                        </label>
-                                    ))}
-                                </div>
-
-                                <div className="mt-6">
-                                    <input
-                                        type="range"
-                                        min="199" max="5999"
-                                        value={priceRange}
-                                        onChange={(e) => setPriceRange(e.target.value)}
-                                        className="w-full h-1.5 bg-[#e5dfd5] rounded-lg appearance-none cursor-pointer accent-[#b58145]"
-                                    />
-                                    <div className="flex justify-between text-[11px] font-bold text-gray-800 mt-2">
-                                        <span>₹199</span>
-                                        <span>₹5999</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Size Filter */}
-                            <div>
-                                <div className="flex justify-between items-center mb-4 cursor-pointer">
-                                    <h4 className="font-bold text-[14px] text-[#1c1c1c]">Size</h4>
-                                    <ChevronDown size={14} className="text-gray-400" />
-                                </div>
-                                <div className="grid grid-cols-4 gap-2">
-                                    {sizeFilters.map(filter => (
-                                        <button
-                                            key={filter}
-                                            onClick={() => handleToggle(setSelectedSizes, selectedSizes, filter)}
-                                            className={`h-9 rounded-full flex items-center justify-center text-[12px] font-bold transition-colors ${selectedSizes.includes(filter)
-                                                ? 'bg-[#b58145] text-white'
-                                                : 'bg-[#f4f4f4] text-gray-700 hover:bg-gray-200'
-                                                }`}
-                                        >
-                                            {filter}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-
-                            {/* Collections Filter */}
-                            <div className="mb-8 mt-8">
-                                <div className="flex justify-between items-center mb-4 cursor-pointer">
-                                    <h4 className="font-bold text-[14px] text-[#1c1c1c]">Collections</h4>
-                                    <ChevronDown size={14} className="text-gray-400" />
-                                </div>
-                                <div className="space-y-3">
-                                    {['New Arrivals', 'Best Sellers'].map(filter => (
-                                        <label key={filter} className="flex items-center gap-3 cursor-pointer group">
-                                            <input
-                                                type="checkbox"
-                                                className="w-4 h-4 rounded border-gray-400 text-black focus:ring-black accent-black"
-                                                checked={selectedCollections.includes(filter)}
-                                                onChange={() => handleToggle(setSelectedCollections, selectedCollections, filter)}
-                                            />
-                                            <span className="text-[14px] text-gray-800 font-bold group-hover:text-black">{filter}</span>
-                                        </label>
-                                    ))}
-                                </div>
-                            </div>
-
-                            {/* Availability Filter */}
-                            <div>
-                                <label className="flex items-center gap-3 cursor-pointer group">
-                                    <input
-                                        type="checkbox"
-                                        className="w-4 h-4 rounded border-gray-400 text-black focus:ring-black accent-black"
-                                        checked={inStockOnly}
-                                        onChange={(e) => setInStockOnly(e.target.checked)}
-                                    />
-                                    <span className="text-[14px] font-bold text-[#1c1c1c] group-hover:text-black">In Stock Only</span>
-                                </label>
-                            </div>
-                        </div>
-
-                    </aside>
-
-                    {/* Right Content */}
-                    <div className="flex-1 flex flex-col gap-5 min-w-0">
-
-                        {/* Banner */}
-                        <div className="bg-gradient-to-br from-[#ebe1d5] to-[#f4ecd8] rounded-[24px] overflow-hidden flex flex-col md:flex-row relative h-auto">
-                            <div className="p-6 md:p-8 flex-1 flex flex-col justify-center z-10 relative">
-                                <span className="text-[#4a4036] font-extrabold text-[10px] md:text-[11px] mb-1.5 tracking-[0.15em] uppercase flex items-center gap-2">
-                                    NEW <span className="font-medium text-[#7a6a58]">SEASON COLLECTION</span>
-                                </span>
-                                <h2 className="font-serif text-3xl md:text-[38px] font-black text-[#1c1c1c] leading-[1.05] mb-2 tracking-tight">
-                                    Premium<br />
-                                    <span className="text-[#b58145]">T-Shirts</span>
-                                </h2>
-                                <p className="text-[#5a4d41] font-bold text-[12px] md:text-[13px] mb-4 md:mb-5">
-                                    Style meets comfort. Wear your vibe.
-                                </p>
-
-                                <div className="flex items-center gap-4 md:gap-5 mb-4 md:mb-5">
-                                    <div className="flex flex-col items-center gap-1.5">
-                                        <div className="w-8 h-8 md:w-9 md:h-9 rounded-full bg-white/60 border border-white flex items-center justify-center shadow-sm">
-                                            <Leaf size={14} className="text-[#4a4036]" />
-                                        </div>
-                                        <span className="text-[8px] font-bold text-[#4a4036] text-center leading-tight">Ultra Soft<br />Cotton</span>
-                                    </div>
-                                    <div className="flex flex-col items-center gap-1.5">
-                                        <div className="w-8 h-8 md:w-9 md:h-9 rounded-full bg-white/60 border border-white flex items-center justify-center shadow-sm">
-                                            <Wind size={14} className="text-[#4a4036]" />
-                                        </div>
-                                        <span className="text-[8px] font-bold text-[#4a4036] text-center leading-tight">Breathable<br />All Day</span>
-                                    </div>
-                                    <div className="flex flex-col items-center gap-1.5">
-                                        <div className="w-8 h-8 md:w-9 md:h-9 rounded-full bg-white/60 border border-white flex items-center justify-center shadow-sm">
-                                            <Diamond size={14} className="text-[#4a4036]" />
-                                        </div>
-                                        <span className="text-[8px] font-bold text-[#4a4036] text-center leading-tight">Premium<br />Quality</span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="w-full md:w-[45%] h-[180px] md:h-auto md:min-h-[260px] flex items-end justify-center md:justify-end pt-4 md:pt-0">
-                                <img src="/tishirtcombo.png" alt="Premium T-Shirts" className="w-[75%] md:w-[85%] h-full object-contain object-bottom drop-shadow-2xl mix-blend-multiply" loading="lazy" decoding="async" />
-                            </div>
-                        </div>
-
-                        {/* Quick Filters Wrapper */}
-                        <div className="relative group">
-                            {/* Quick Filters Row */}
-                            <div ref={scrollContainerRef} className="flex overflow-x-auto gap-3 py-2 hide-scrollbar -mx-4 px-4 md:mx-0 md:px-0 items-center scroll-smooth pr-[60px] md:pr-12">
-                                {/* "All" button */}
-                                <div
-                                    onClick={() => handleCategoryClick('All')}
-                                    className={`flex flex-col items-center justify-center gap-1 w-[60px] h-[60px] rounded-[14px] cursor-pointer flex-shrink-0 transition-all ${selectedCategory === 'All' ? 'bg-[#111315] text-white shadow-md' : 'bg-[#111315] text-white hover:bg-black'}`}
-                                >
-                                    <LayoutGrid size={18} className="text-white" />
-                                    <span className="font-semibold text-[11px]">All</span>
-                                </div>
-
-                                {/* Dynamic Category Buttons */}
-                                {isCategoriesLoading ? (
-                                    [...Array(6)].map((_, i) => (
-                                        <div key={i} className="flex-shrink-0 w-[140px] h-[60px] rounded-[14px] bg-gray-200 animate-pulse border border-gray-100"></div>
-                                    ))
-                                ) : (
-                                    sortedCategories.map(cat => (
-                                        <div
-                                            key={cat._id || cat.name}
-                                            onClick={() => handleCategoryClick(cat.name)}
-                                            className={`flex items-center gap-2.5 pr-4 pl-1.5 py-1.5 h-[60px] rounded-[14px] border cursor-pointer flex-shrink-0 transition-all ${selectedCategory === cat.name ? 'border-[#111315] shadow-[0_2px_12px_rgba(0,0,0,0.04)] bg-white' : 'bg-white border-gray-100 hover:border-gray-200'}`}
-                                        >
-                                            <div className="w-[48px] h-[48px] rounded-[10px] bg-[#f8f9fa] overflow-hidden flex items-center justify-center shrink-0">
-                                                {cat.image ? (
-                                                    <img src={cat.image} alt={cat.name} className="w-full h-full object-cover mix-blend-multiply" loading="lazy" decoding="async" />
-                                                ) : (
-                                                    <div className="text-gray-400">
-                                                        {getCategoryIcon(cat.name)}
-                                                    </div>
-                                                )}
-                                            </div>
-                                            <div className="flex flex-col justify-center">
-                                                <span className="font-extrabold text-[13px] text-[#111315] whitespace-nowrap">{cat.name}</span>
-                                                <span className="text-[10px] font-medium text-gray-500 mt-0.5">{cat.subtitle || 'Explore'}</span>
-                                            </div>
-                                        </div>
-                                    ))
-                                )}
-
-                            </div>
-
-                            {/* Scroll Right Button */}
-                            <div
-                                onClick={scrollRight}
-                                className="absolute right-0 md:-right-3 top-1/2 -translate-y-1/2 w-[44px] h-[44px] rounded-full bg-white shadow-[0_4px_15px_rgba(0,0,0,0.12)] flex items-center justify-center cursor-pointer hover:shadow-[0_6px_20px_rgba(0,0,0,0.18)] transition-shadow border border-gray-100 z-10"
-                            >
-                                <ChevronRight size={20} className="text-[#111315]" />
-                            </div>
-                        </div>
-
-                        {/* Top Bar */}
-                        <div className="flex flex-col sm:flex-row justify-between items-center gap-4 py-2 mt-2 mb-4">
-                            <p className="text-[13px] font-bold text-gray-500">
-                                {isProductsLoading ? "Loading products..." : `Showing ${filteredProducts.length > 0 ? indexOfFirstProduct + 1 : 0} - ${Math.min(indexOfLastProduct, filteredProducts.length)} of ${filteredProducts.length} products`}
-                            </p>
-                            <div className="flex items-center gap-3">
-                                {/* Mobile Filter Trigger */}
+                                {/* Dyne Test Pen Subcategory */}
                                 <button
-                                    type="button"
-                                    onClick={() => setIsMobileFilterOpen(true)}
-                                    className="lg:hidden flex items-center gap-1.5 px-3.5 py-2.5 bg-white border border-gray-200 rounded-[10px] text-[12px] font-bold text-[#1c1c1c] shadow-sm active:scale-95 transition-transform"
+                                    onClick={() => {
+                                        setSelectedCategory('Dyne Test Pen');
+                                        setSelectedSubcategory('Dyne Test Pen');
+                                        navigate(`/shop?category=${encodeURIComponent('Dyne Test Pen')}&subcategory=${encodeURIComponent('Dyne Test Pen')}`);
+                                    }}
+                                    className={`w-full text-left px-2.5 py-1.5 rounded-lg font-bold transition-all flex items-center justify-between ${
+                                        selectedCategory === 'Dyne Test Pen' && selectedSubcategory === 'Dyne Test Pen'
+                                            ? 'bg-[#0B3B6F] text-white shadow-xs' 
+                                            : 'text-[#172B4D] hover:bg-[#F5F8FC] border border-transparent hover:border-gray-200'
+                                    }`}
                                 >
-                                    <Filter size={14} className="text-[#b58145]" />
-                                    <span>Filters</span>
-                                    {(selectedPriceRanges.length > 0 || selectedSizes.length > 0 || selectedCollections.length > 0 || inStockOnly) && (
-                                        <span className="w-2 h-2 bg-[#b58145] rounded-full animate-pulse" />
-                                    )}
+                                    <span>Dyne Test Pen</span>
+                                    <span className={`text-[10px] font-extrabold px-1.5 py-0.5 rounded-full ${
+                                        selectedCategory === 'Dyne Test Pen' && selectedSubcategory === 'Dyne Test Pen' ? 'bg-white/20 text-white' : 'bg-blue-50 text-[#0D6EFD]'
+                                    }`}>
+                                        22
+                                    </span>
                                 </button>
 
-                                <div className="flex items-center gap-2">
-                                    <span className="text-[13px] font-bold text-gray-500">Sort by:</span>
-                                    <div className="relative">
-                                        <select
-                                            value={sortOption}
-                                            onChange={(e) => setSortOption(e.target.value)}
-                                            className="appearance-none bg-white border border-gray-200 rounded-[10px] pl-4 pr-10 py-2.5 text-[12px] font-bold text-[#1c1c1c] focus:outline-none focus:border-[#b58145] cursor-pointer shadow-sm"
-                                        >
-                                            <option>Popularity</option>
-                                            <option>Price: Low to High</option>
-                                            <option>Price: High to Low</option>
-                                            <option>Newest First</option>
-                                        </select>
-                                        <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" />
-                                    </div>
-                                </div>
-                                <div className="hidden sm:flex items-center gap-1 border border-gray-200 rounded-[10px] p-1 bg-white shadow-sm">
-                                    <button className="p-1.5 rounded-[8px] bg-[#f4f4f4] text-[#1c1c1c]">
-                                        <LayoutGrid size={16} />
-                                    </button>
-                                    <button className="p-1.5 rounded-[8px] text-gray-400 hover:text-[#1c1c1c] hover:bg-gray-50">
-                                        <List size={16} />
-                                    </button>
-                                </div>
+                                {/* Dyne Test Pen Ink Subcategory */}
+                                <button
+                                    onClick={() => {
+                                        setSelectedCategory('Dyne Test Pen');
+                                        setSelectedSubcategory('Dyne Test Pen Ink');
+                                        navigate(`/shop?category=${encodeURIComponent('Dyne Test Pen')}&subcategory=${encodeURIComponent('Dyne Test Pen Ink')}`);
+                                    }}
+                                    className={`w-full text-left px-2.5 py-1.5 rounded-lg font-bold transition-all flex items-center justify-between ${
+                                        selectedCategory === 'Dyne Test Pen' && selectedSubcategory === 'Dyne Test Pen Ink'
+                                            ? 'bg-[#0B3B6F] text-white shadow-xs' 
+                                            : 'text-[#172B4D] hover:bg-[#F5F8FC] border border-transparent hover:border-gray-200'
+                                    }`}
+                                >
+                                    <span>Dyne Test Pen Ink</span>
+                                    <span className={`text-[10px] font-extrabold px-1.5 py-0.5 rounded-full ${
+                                        selectedCategory === 'Dyne Test Pen' && selectedSubcategory === 'Dyne Test Pen Ink' ? 'bg-white/20 text-white' : 'bg-purple-50 text-purple-700'
+                                    }`}>
+                                        23
+                                    </span>
+                                </button>
                             </div>
                         </div>
 
-                        {/* Product Grid */}
-                        {isProductsLoading ? (
-                            <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-5">
-                                {[...Array(8)].map((_, index) => (
-                                    <ProductSkeleton key={index} />
+                        {/* Dyne Level Filters */}
+                        <div className="pt-2 border-t border-gray-100">
+                            <h4 className="text-[11px] font-black text-[#0B3B6F] uppercase tracking-wider mb-2">
+                                Target Dyne Rating
+                            </h4>
+                            <div className="grid grid-cols-2 gap-1.5">
+                                {dyneOptions.map((dyne, idx) => {
+                                    const isChecked = selectedDynes.includes(dyne);
+                                    return (
+                                        <label 
+                                            key={idx} 
+                                            className={`flex items-center gap-1.5 px-2 py-1 rounded-md border transition-all cursor-pointer text-xs ${
+                                                isChecked 
+                                                    ? 'bg-blue-50 border-[#0D6EFD] text-[#0B3B6F] font-bold' 
+                                                    : 'border-gray-200 hover:bg-gray-50 text-gray-700 font-medium'
+                                            }`}
+                                        >
+                                            <input
+                                                type="checkbox"
+                                                checked={isChecked}
+                                                onChange={(e) => {
+                                                    if (e.target.checked) setSelectedDynes([...selectedDynes, dyne]);
+                                                    else setSelectedDynes(selectedDynes.filter(d => d !== dyne));
+                                                }}
+                                                className="w-3.5 h-3.5 rounded text-[#0B3B6F] focus:ring-[#0B3B6F] border-gray-300 cursor-pointer"
+                                            />
+                                            <span className="text-[11px] leading-tight font-mono">{dyne.replace(' Dyne/cm', '')} Dyne</span>
+                                        </label>
+                                    );
+                                })}
+                            </div>
+                        </div>
+
+                        {/* Quick Quote Assistance */}
+                        <div className="bg-gradient-to-br from-[#F5F8FC] to-[#EDF3FA] p-3.5 rounded-xl border border-[#DCE5EF] text-center">
+                            <h5 className="text-[11px] font-black text-[#0B3B6F] mb-0.5 uppercase tracking-wide">Custom Dyne Formulations</h5>
+                            <p className="text-[10px] text-gray-600 mb-2 leading-tight">
+                                Need custom 28–72 Dyne/cm or OEM private labeling?
+                            </p>
+                            <button
+                                onClick={() => setIsQuoteOpen(true)}
+                                className="w-full bg-[#0B3B6F] hover:bg-[#08294d] text-white text-[11px] font-bold py-1.5 rounded-lg transition-all shadow-xs flex items-center justify-center cursor-pointer"
+                            >
+                                Contact Lab
+                            </button>
+                        </div>
+
+                    </div>
+
+                    {/* Products Grid (9 cols) */}
+                    <div className="lg:col-span-9 space-y-6">
+                        
+                        {/* Control Bar: Product Count & Sort */}
+                        <div className="bg-white p-4 rounded-xl border border-[#DCE5EF] flex flex-wrap items-center justify-between gap-4">
+                            <div className="text-xs text-gray-600">
+                                Showing <span className="font-bold text-[#172B4D]">{filteredProducts.length}</span> industrial products
+                                {selectedCategory !== 'All' && (
+                                    <span> in <span className="font-bold text-[#0B3B6F]">{selectedCategory}</span></span>
+                                )}
+                                {selectedSubcategory !== 'All' && (
+                                    <span> &gt; <span className="font-bold text-[#0D6EFD]">{selectedSubcategory}</span></span>
+                                )}
+                            </div>
+
+                            <div className="flex items-center gap-3">
+                                <label className="text-xs text-gray-500 font-medium">Sort By:</label>
+                                <select
+                                    value={sortBy}
+                                    onChange={(e) => setSortBy(e.target.value)}
+                                    className="text-xs font-semibold bg-[#F5F8FC] border border-[#DCE5EF] rounded-lg px-3 py-1.5 text-[#172B4D] outline-none"
+                                >
+                                    <option value="featured">Featured / Best Sellers</option>
+                                    <option value="price-asc">Price: Low to High</option>
+                                    <option value="price-desc">Price: High to Low</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        {/* Product Cards */}
+                        {isLoading ? (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                                {[...Array(6)].map((_, i) => (
+                                    <ProductSkeleton key={i} />
                                 ))}
                             </div>
-                        ) : filteredProducts.length === 0 ? (
-                            <div className="bg-white rounded-2xl p-16 text-center border border-gray-100 mt-4 shadow-sm flex flex-col items-center justify-center">
-                                <p className="text-gray-500 font-medium text-[15px]">No products match your filters.</p>
+                        ) : paginatedProducts.length === 0 ? (
+                            <div className="bg-white rounded-2xl p-12 text-center border border-[#DCE5EF]">
+                                <h3 className="text-base font-bold text-[#172B4D] mb-1">No matching products found</h3>
+                                <p className="text-xs text-gray-500 mb-4">Try clearing some filter criteria or search for a different dyne level.</p>
                                 <button
                                     onClick={() => {
-                                        navigate('/shop');
-                                        setSelectedPriceRanges([]);
-                                        setSelectedAges([]);
-                                        setSelectedSizes([]);
-                                        setPriceRange(5999);
+                                        setSelectedCategory('All');
+                                        setSelectedDynes([]);
+                                        setSearchQuery('');
                                     }}
-                                    className="mt-4 text-[#b58145] font-bold hover:underline"
+                                    className="bg-[#0B3B6F] text-white text-xs font-bold px-4 py-2 rounded-lg"
                                 >
-                                    Clear all filters
+                                    Reset Filters
                                 </button>
                             </div>
                         ) : (
-                            <>
-                                <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-5">
-                                    {currentProducts.map(product => (
-                                        <ShopProductCard key={product._id} product={product} />
-                                    ))}
-                                </div>
+                            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-6">
+                                {paginatedProducts.map((p, idx) => (
+                                    <ProductCard key={p._id || idx} product={p} />
+                                ))}
+                            </div>
+                        )}
 
-                                {/* Pagination */}
-                                {totalPages > 1 && (
-                                    <div className="flex justify-center items-center gap-2 mt-12 mb-8">
-                                        <button
-                                            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                                            disabled={currentPage === 1}
-                                            className="w-8 h-8 rounded-full bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 flex items-center justify-center font-bold text-xs shadow-sm disabled:opacity-50"
-                                        >
-                                            <ChevronLeft size={14} />
-                                        </button>
-
-                                        {[...Array(totalPages)].map((_, i) => (
-                                            <button
-                                                key={i + 1}
-                                                onClick={() => setCurrentPage(i + 1)}
-                                                className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs shadow-sm ${currentPage === i + 1 ? 'bg-black text-white' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'}`}
-                                            >
-                                                {i + 1}
-                                            </button>
-                                        ))}
-
-                                        <button
-                                            onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                                            disabled={currentPage === totalPages}
-                                            className="w-8 h-8 rounded-full bg-white border border-gray-200 text-black hover:bg-[#fcfaf7] flex items-center justify-center shadow-sm disabled:opacity-50"
-                                        >
-                                            <ChevronRight size={14} />
-                                        </button>
-                                    </div>
-                                )}
-                            </>
+                        {/* Pagination */}
+                        {totalPages > 1 && (
+                            <div className="flex items-center justify-center gap-2 pt-6">
+                                {[...Array(totalPages)].map((_, i) => (
+                                    <button
+                                        key={i}
+                                        onClick={() => setCurrentPage(i + 1)}
+                                        className={`w-8 h-8 rounded-lg text-xs font-bold transition-colors ${
+                                            currentPage === i + 1 
+                                                ? 'bg-[#0B3B6F] text-white' 
+                                                : 'bg-white border border-[#DCE5EF] text-[#172B4D] hover:bg-gray-50'
+                                        }`}
+                                    >
+                                        {i + 1}
+                                    </button>
+                                ))}
+                            </div>
                         )}
 
                     </div>
+
                 </div>
+
             </div>
 
-            {/* Mobile Filters BottomSheet */}
-            <BottomSheet
-                isOpen={isMobileFilterOpen}
-                onClose={handleCloseMobileFilter}
-                title="Filters"
-            >
-                <div className="space-y-6">
-                    {/* Clear All Header */}
-                    <div className="flex justify-between items-center pb-3 border-b border-stone-200 dark:border-stone-800">
-                        <div className="flex items-center gap-2">
-                            <SlidersHorizontal size={16} className="text-[#b58145] shrink-0" strokeWidth={2.5} />
-                            <span className="text-[15px] sm:text-base text-stone-900 dark:text-white font-black tracking-tight">
-                                Refine your selection
-                            </span>
-                        </div>
-                        <button
-                            type="button"
-                            onClick={() => {
-                                setSelectedPriceRanges([]);
-                                setSelectedSizes([]);
-                                setSelectedCollections([]);
-                                setInStockOnly(false);
-                                setPriceRange(5999);
-                            }}
-                            className="flex items-center gap-1.5 text-xs font-black px-3.5 py-1.5 rounded-full bg-[#b58145] hover:bg-[#9a6c38] text-white active:scale-95 transition-all shadow-sm"
-                        >
-                            <RotateCcw size={12} strokeWidth={2.6} />
-                            <span>Reset All</span>
-                        </button>
-                    </div>
-
-                    {/* Price Filter */}
-                    <div>
-                        <div className="flex items-center justify-between mb-3.5">
-                            <div className="flex items-center gap-2">
-                                <span className="w-1.5 h-4.5 bg-[#b58145] rounded-full inline-block"></span>
-                                <h4 className="font-black text-base text-stone-900 dark:text-white uppercase tracking-wider">
-                                    Price
-                                </h4>
-                            </div>
-                            <span className="text-xs font-black text-[#b58145] dark:text-amber-400 bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800/60 px-2.5 py-0.5 rounded-full">
-                                ₹199 - ₹{priceRange}
-                            </span>
-                        </div>
-                        <div className="space-y-2.5">
-                            {priceFilters.map(filter => (
-                                <label key={filter} className="flex items-center gap-3 cursor-pointer select-none group">
-                                    <input
-                                        type="checkbox"
-                                        className="w-4 h-4 rounded border-stone-300 dark:border-stone-600 text-amber-600 focus:ring-amber-500 accent-[#b58145]"
-                                        checked={selectedPriceRanges.includes(filter)}
-                                        onChange={() => handleToggle(setSelectedPriceRanges, selectedPriceRanges, filter)}
-                                    />
-                                    <span className="text-sm text-stone-800 dark:text-stone-100 font-bold group-hover:text-stone-900 dark:group-hover:text-white">
-                                        {filter}
-                                    </span>
-                                </label>
-                            ))}
-                        </div>
-
-                        <div className="mt-4">
-                            <input
-                                type="range"
-                                min="199" max="5999"
-                                value={priceRange}
-                                onChange={(e) => setPriceRange(e.target.value)}
-                                className="w-full h-2 bg-stone-200 dark:bg-stone-700 rounded-lg appearance-none cursor-pointer accent-[#b58145]"
-                            />
-                            <div className="flex justify-between text-xs font-black text-stone-900 dark:text-white mt-2">
-                                <span className="bg-stone-100 dark:bg-stone-800 px-2.5 py-0.5 rounded-md text-stone-900 dark:text-stone-100 font-black">₹199</span>
-                                <span className="bg-stone-100 dark:bg-stone-800 px-2.5 py-0.5 rounded-md text-stone-900 dark:text-stone-100 font-black">Up to ₹{priceRange}</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Size Filter */}
-                    <div>
-                        <div className="flex items-center gap-2 mb-3.5">
-                            <span className="w-1.5 h-4.5 bg-[#b58145] rounded-full inline-block"></span>
-                            <h4 className="font-black text-base text-stone-900 dark:text-white uppercase tracking-wider">
-                                Size
-                            </h4>
-                        </div>
-                        <div className="grid grid-cols-4 gap-2">
-                            {sizeFilters.map(filter => (
-                                <button
-                                    key={filter}
-                                    type="button"
-                                    onClick={() => handleToggle(setSelectedSizes, selectedSizes, filter)}
-                                    className={`h-10 rounded-xl flex items-center justify-center text-xs font-black transition-all ${selectedSizes.includes(filter)
-                                            ? 'bg-gradient-to-r from-amber-600 to-amber-700 text-white shadow-sm'
-                                            : 'bg-stone-100 dark:bg-stone-800 text-stone-900 dark:text-stone-100 border border-stone-200 dark:border-stone-700 hover:border-amber-400'
-                                        }`}
-                                >
-                                    {filter}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* Collections */}
-                    <div>
-                        <div className="flex items-center gap-2 mb-3.5">
-                            <span className="w-1.5 h-4.5 bg-[#b58145] rounded-full inline-block"></span>
-                            <h4 className="font-black text-base text-stone-900 dark:text-white uppercase tracking-wider">
-                                Collections
-                            </h4>
-                        </div>
-                        <div className="space-y-2.5">
-                            {['New Arrivals', 'Best Sellers'].map(filter => (
-                                <label key={filter} className="flex items-center gap-3 cursor-pointer select-none group">
-                                    <input
-                                        type="checkbox"
-                                        className="w-4 h-4 rounded border-stone-300 dark:border-stone-600 text-amber-600 focus:ring-amber-500 accent-[#b58145]"
-                                        checked={selectedCollections.includes(filter)}
-                                        onChange={() => handleToggle(setSelectedCollections, selectedCollections, filter)}
-                                    />
-                                    <span className="text-sm text-stone-800 dark:text-stone-100 font-bold group-hover:text-stone-900 dark:group-hover:text-white">
-                                        {filter}
-                                    </span>
-                                </label>
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* In Stock Only */}
-                    <div className="pt-1">
-                        <label className="flex items-center gap-3 cursor-pointer select-none group">
-                            <input
-                                type="checkbox"
-                                className="w-4 h-4 rounded border-stone-300 dark:border-stone-600 text-amber-600 focus:ring-amber-500 accent-[#b58145]"
-                                checked={inStockOnly}
-                                onChange={(e) => setInStockOnly(e.target.checked)}
-                            />
-                            <div className="flex items-center gap-2">
-                                <span className="w-1.5 h-4 bg-[#b58145] rounded-full inline-block"></span>
-                                <span className="text-sm font-black text-stone-900 dark:text-white group-hover:text-black dark:group-hover:text-white">
-                                    In Stock Only
-                                </span>
-                            </div>
-                        </label>
-                    </div>
-
-                    {/* Apply Button */}
-                    <button
-                        type="button"
-                        onClick={handleCloseMobileFilter}
-                        className="w-full py-3.5 bg-gradient-to-r from-amber-600 via-amber-500 to-amber-700 hover:brightness-105 text-white text-sm font-black rounded-xl shadow-lg shadow-amber-600/25 active:scale-[0.98] transition-all"
+            {/* Mobile Filter Bottom Drawer / Modal */}
+            {isMobileFilterOpen && (
+                <div className="fixed inset-0 z-50 lg:hidden flex flex-col justify-end bg-black/60 backdrop-blur-xs animate-fade-in">
+                    <div 
+                        className="bg-white rounded-t-3xl max-h-[85vh] flex flex-col shadow-2xl overflow-hidden animate-slide-up"
+                        onClick={(e) => e.stopPropagation()}
                     >
-                        Apply Filters ({filteredProducts.length} items)
-                    </button>
+                        {/* Drawer Header */}
+                        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+                            <div className="flex items-center gap-2">
+                                <Filter size={16} className="text-[#0B3B6F]" />
+                                <h3 className="text-sm font-black text-[#0B3B6F] uppercase tracking-wider">
+                                    Technical Filters
+                                </h3>
+                            </div>
+                            <div className="flex items-center gap-3">
+                                <button
+                                    onClick={() => {
+                                        setSelectedCategory('All');
+                                        setSelectedSubcategory('All');
+                                        setSelectedDynes([]);
+                                        setSearchQuery('');
+                                    }}
+                                    className="text-xs text-[#0D6EFD] font-bold hover:underline"
+                                >
+                                    Reset
+                                </button>
+                                <button
+                                    onClick={() => setIsMobileFilterOpen(false)}
+                                    className="p-1.5 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 transition-colors"
+                                >
+                                    <X size={18} />
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Drawer Body (Scrollable) */}
+                        <div className="p-5 overflow-y-auto space-y-6">
+                            
+                            {/* 1. Product Division */}
+                            <div>
+                                <h4 className="text-xs font-black text-[#0B3B6F] uppercase tracking-wider mb-2.5">
+                                    Product Division
+                                </h4>
+                                <div className="space-y-1.5">
+                                    <button
+                                        onClick={() => {
+                                            setSelectedCategory('All');
+                                            setSelectedSubcategory('All');
+                                        }}
+                                        className={`w-full text-left px-3 py-2.5 rounded-xl font-bold transition-all flex items-center justify-between text-xs ${
+                                            selectedCategory === 'All' && selectedSubcategory === 'All'
+                                                ? 'bg-[#0B3B6F] text-white' 
+                                                : 'text-gray-700 bg-gray-50 border border-gray-200'
+                                        }`}
+                                    >
+                                        <span>All Dyne Products</span>
+                                        <span className="text-[11px] font-extrabold px-2 py-0.5 rounded-full bg-white/20">
+                                            {allProducts.length}
+                                        </span>
+                                    </button>
+
+                                    <button
+                                        onClick={() => {
+                                            setSelectedCategory('Dyne Test Pen');
+                                            setSelectedSubcategory('Dyne Test Pen');
+                                        }}
+                                        className={`w-full text-left px-3 py-2.5 rounded-xl font-bold transition-all flex items-center justify-between text-xs ${
+                                            selectedCategory === 'Dyne Test Pen' && selectedSubcategory === 'Dyne Test Pen'
+                                                ? 'bg-[#0B3B6F] text-white' 
+                                                : 'text-gray-700 bg-gray-50 border border-gray-200'
+                                        }`}
+                                    >
+                                        <span>Dyne Test Pen</span>
+                                        <span className="text-[11px] font-extrabold px-2 py-0.5 rounded-full bg-blue-50 text-[#0D6EFD]">
+                                            22
+                                        </span>
+                                    </button>
+
+                                    <button
+                                        onClick={() => {
+                                            setSelectedCategory('Dyne Test Pen');
+                                            setSelectedSubcategory('Dyne Test Pen Ink');
+                                        }}
+                                        className={`w-full text-left px-3 py-2.5 rounded-xl font-bold transition-all flex items-center justify-between text-xs ${
+                                            selectedCategory === 'Dyne Test Pen' && selectedSubcategory === 'Dyne Test Pen Ink'
+                                                ? 'bg-[#0B3B6F] text-white' 
+                                                : 'text-gray-700 bg-gray-50 border border-gray-200'
+                                        }`}
+                                    >
+                                        <span>Dyne Test Pen Ink</span>
+                                        <span className="text-[11px] font-extrabold px-2 py-0.5 rounded-full bg-purple-50 text-purple-700">
+                                            23
+                                        </span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* 2. Dyne Level Checkboxes */}
+                            <div>
+                                <h4 className="text-xs font-black text-[#0B3B6F] uppercase tracking-wider mb-2.5">
+                                    Target Dyne Rating
+                                </h4>
+                                <div className="grid grid-cols-2 gap-2">
+                                    {dyneOptions.map((dyne, idx) => {
+                                        const isChecked = selectedDynes.includes(dyne);
+                                        return (
+                                            <button 
+                                                key={idx} 
+                                                type="button"
+                                                onClick={() => {
+                                                    if (isChecked) setSelectedDynes(selectedDynes.filter(d => d !== dyne));
+                                                    else setSelectedDynes([...selectedDynes, dyne]);
+                                                }}
+                                                className={`flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl border text-xs font-bold transition-all ${
+                                                    isChecked 
+                                                        ? 'bg-[#0B3B6F] border-[#0B3B6F] text-white shadow-xs' 
+                                                        : 'border-gray-200 bg-gray-50 text-gray-700'
+                                                }`}
+                                            >
+                                                <span>{dyne.replace(' Dyne/cm', '')} Dyne</span>
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+
+                            {/* Custom OEM Help */}
+                            <div className="bg-[#F5F8FC] p-4 rounded-xl border border-[#DCE5EF] text-center">
+                                <h5 className="text-xs font-bold text-[#0B3B6F] mb-1">Custom Dyne Formulations?</h5>
+                                <p className="text-[11px] text-gray-500 mb-3">28 to 72 Dyne/cm or OEM private labeling available</p>
+                                <button
+                                    onClick={() => {
+                                        setIsMobileFilterOpen(false);
+                                        setIsQuoteOpen(true);
+                                    }}
+                                    className="w-full bg-[#0B3B6F] text-white text-xs font-bold py-2 rounded-lg"
+                                >
+                                    Contact Lab
+                                </button>
+                            </div>
+
+                        </div>
+
+                        {/* Drawer Footer CTA */}
+                        <div className="p-4 border-t border-gray-100 bg-white">
+                            <button
+                                onClick={() => setIsMobileFilterOpen(false)}
+                                className="w-full bg-[#0B3B6F] text-white font-black text-sm py-3.5 rounded-xl shadow-md active:scale-98 transition-all flex items-center justify-center gap-2"
+                            >
+                                <span>Show {filteredProducts.length} Results</span>
+                            </button>
+                        </div>
+                    </div>
                 </div>
-            </BottomSheet>
-        </div>
+            )}
+
+            <RequestQuoteModal
+                isOpen={isQuoteOpen}
+                onClose={() => setIsQuoteOpen(false)}
+                initialProduct="Industrial Catalog Inquiry"
+            />
+        </main>
     );
 };
 

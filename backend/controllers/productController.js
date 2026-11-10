@@ -1,168 +1,119 @@
 import Product from '../models/Product.js';
+import Location from '../models/Location.js';
 
-// @desc    Get all products
-// @route   GET /api/products
-// @access  Public
 export const getProducts = async (req, res) => {
-    try {
-        const query = {};
-        if (req.query.isNewArrival === 'true') query.isNewArrival = true;
-        if (req.query.isBestSeller === 'true') query.isBestSeller = true;
-        
-        let productsQuery = Product.find(query).sort({ createdAt: -1 });
-        if (req.query.limit) {
-            productsQuery = productsQuery.limit(parseInt(req.query.limit));
-        }
-        
-        const products = await productsQuery;
-        res.json(products);
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
+  try {
+    const products = await Product.find().populate('category').populate('subcategory');
+    res.json(products);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching products', error: error.message });
+  }
 };
 
-// @desc    Get single product
-// @route   GET /api/products/:id
-// @access  Public
-export const getProductById = async (req, res) => {
-    try {
-        const idOrSlug = req.params.id;
-        let product;
-        if (idOrSlug.match(/^[0-9a-fA-F]{24}$/)) {
-            product = await Product.findById(idOrSlug) || await Product.findOne({ slug: idOrSlug });
-        } else {
-            product = await Product.findOne({ slug: idOrSlug });
-        }
-
-        if (product) {
-            res.json(product);
-        } else {
-            res.status(404).json({ message: 'Product not found' });
-        }
-    } catch (error) {
-        res.status(500).json({ message: error.message });
+export const getProductBySlug = async (req, res) => {
+  try {
+    const { slug } = req.params;
+    
+    // Check if slug contains '-in-' for pSEO
+    const inIndex = slug.lastIndexOf('-in-');
+    let productSlug = slug;
+    let locationSlug = null;
+    let location = null;
+    
+    if (inIndex !== -1) {
+      productSlug = slug.substring(0, inIndex);
+      locationSlug = slug.substring(inIndex + 4);
+      location = await Location.findOne({ slug: locationSlug, status: 'Active' });
+      
+      // If location doesn't exist, we fallback to treating the whole slug as product slug
+      if (!location) {
+        productSlug = slug;
+      }
     }
+
+    let product = await Product.findOne({ slug: productSlug }).populate('category').populate('subcategory');
+    if (!product) return res.status(404).json({ message: 'Product not found' });
+    
+    // Dynamic Location SEO Replacement
+    if (location) {
+      // Create a deep copy to modify
+      product = JSON.parse(JSON.stringify(product));
+      
+      const cityName = location.name;
+      
+      // Replace {city} placeholders
+      const replaceCity = (text) => text ? text.replace(/{city}/gi, cityName) : text;
+      
+      product.title = product.title.includes('{city}') ? replaceCity(product.title) : `${product.title} in ${cityName}`;
+      product.seoTitle = product.seoTitle ? (product.seoTitle.includes('{city}') ? replaceCity(product.seoTitle) : `${product.seoTitle} in ${cityName}`) : `${product.title} in ${cityName}`;
+      
+      product.shortDesc = replaceCity(product.shortDesc);
+      product.longDesc = replaceCity(product.longDesc);
+      product.seoDescription = replaceCity(product.seoDescription);
+      product.seoKeywords = replaceCity(product.seoKeywords);
+      
+      if (product.overviewFeatures) {
+         product.overviewFeatures = product.overviewFeatures.map(f => ({
+             ...f, 
+             title: replaceCity(f.title), 
+             desc: replaceCity(f.desc)
+         }));
+      }
+      
+      if (product.faqs) {
+         product.faqs = product.faqs.map(f => ({
+             ...f, 
+             question: replaceCity(f.question), 
+             answer: replaceCity(f.answer)
+         }));
+      }
+      
+      // Keep the actual requested slug for frontend consistency
+      product.slug = slug; 
+    }
+
+    res.json(product);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching product', error: error.message });
+  }
 };
 
-// @desc    Create a product
-// @route   POST /api/products
-// @access  Private/Admin
 export const createProduct = async (req, res) => {
-    try {
-        const { name, description, price, category, images, stock, isNewArrival, isBestSeller, ageGroup, sizes, bulletPoints, video, baseViews } = req.body;
-        const product = new Product({
-            name,
-            description,
-            price,
-            category,
-            images,
-            stock,
-            isNewArrival,
-            isBestSeller,
-            ageGroup,
-            sizes,
-            bulletPoints,
-            video,
-            baseViews: baseViews || 0,
-        });
-        const createdProduct = await product.save();
-        res.status(201).json(createdProduct);
-    } catch (error) {
-        res.status(400).json({ message: error.message });
+  try {
+    const data = { ...req.body };
+    if (!data.subcategory) {
+      data.subcategory = null;
     }
+    const product = new Product(data);
+    await product.save();
+    res.status(201).json(product);
+  } catch (error) {
+    res.status(400).json({ message: 'Error creating product', error: error.message });
+  }
 };
 
-// @desc    Update a product
-// @route   PUT /api/products/:id
-// @access  Private/Admin
 export const updateProduct = async (req, res) => {
-    try {
-        const { name, description, price, category, images, stock, isNewArrival, isBestSeller, ageGroup, sizes, bulletPoints, video, baseViews } = req.body;
-        const product = await Product.findById(req.params.id);
-
-        if (product) {
-            product.name = name || product.name;
-            product.description = description || product.description;
-            product.price = price || product.price;
-            product.category = category || product.category;
-            product.images = images || product.images;
-            product.stock = stock !== undefined ? stock : product.stock;
-            product.isNewArrival = isNewArrival !== undefined ? isNewArrival : product.isNewArrival;
-            product.ageGroup = ageGroup !== undefined ? ageGroup : product.ageGroup;
-            product.sizes = sizes !== undefined ? sizes : product.sizes;
-            product.bulletPoints = bulletPoints !== undefined ? bulletPoints : product.bulletPoints;
-            product.isBestSeller = isBestSeller !== undefined ? isBestSeller : product.isBestSeller;
-            product.video = video !== undefined ? video : product.video;
-            product.baseViews = baseViews !== undefined ? baseViews : product.baseViews;
-            
-            if (name && name !== product.name) {
-                 product.slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
-            }
-
-            const updatedProduct = await product.save();
-            res.json(updatedProduct);
-        } else {
-            res.status(404).json({ message: 'Product not found' });
-        }
-    } catch (error) {
-        res.status(400).json({ message: error.message });
+  try {
+    const { id } = req.params;
+    const data = { ...req.body };
+    if (!data.subcategory) {
+      data.subcategory = null;
     }
+    const product = await Product.findByIdAndUpdate(id, data, { new: true });
+    if (!product) return res.status(404).json({ message: 'Product not found' });
+    res.json(product);
+  } catch (error) {
+    res.status(400).json({ message: 'Error updating product', error: error.message });
+  }
 };
 
-// @desc    Delete a product
-// @route   DELETE /api/products/:id
-// @access  Private/Admin
 export const deleteProduct = async (req, res) => {
-    try {
-        const product = await Product.findById(req.params.id);
-        if (product) {
-            await product.deleteOne();
-            res.json({ message: 'Product removed' });
-        } else {
-            res.status(404).json({ message: 'Product not found' });
-        }
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
-};
-
-// @desc    Increment product view
-// @route   POST /api/products/:id/view
-// @access  Public
-export const incrementProductView = async (req, res) => {
-    try {
-        const product = await Product.findById(req.params.id);
-        if (product) {
-            product.views += 1;
-            await product.save();
-            res.json({ message: 'View incremented', views: product.views });
-        } else {
-            res.status(404).json({ message: 'Product not found' });
-        }
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
-};
-
-// @desc    Toggle product like
-// @route   POST /api/products/:id/like
-// @access  Public
-export const toggleProductLike = async (req, res) => {
-    try {
-        const { liked } = req.body;
-        const product = await Product.findById(req.params.id);
-        if (product) {
-            if (liked) {
-                product.likes += 1;
-            } else {
-                product.likes = Math.max(0, product.likes - 1);
-            }
-            await product.save();
-            res.json({ message: 'Like updated', likes: product.likes });
-        } else {
-            res.status(404).json({ message: 'Product not found' });
-        }
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
+  try {
+    const { id } = req.params;
+    const product = await Product.findByIdAndDelete(id);
+    if (!product) return res.status(404).json({ message: 'Product not found' });
+    res.json({ message: 'Product deleted successfully' });
+  } catch (error) {
+    res.status(400).json({ message: 'Error deleting product', error: error.message });
+  }
 };

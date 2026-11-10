@@ -100,7 +100,7 @@ const SuccessPage = () => {
             <p className="text-gray-600 font-medium text-base md:text-lg mb-2 text-center max-w-md">
                 {isPending
                     ? 'Your payment is currently being confirmed by the gateway. This page will update shortly.'
-                    : 'Thank you for choosing Ownvibes! Your order has been placed and confirmed.'}
+                    : 'Thank you for choosing ImageTech Industries! Your industrial order has been placed and confirmed for dispatch.'}
             </p>
 
             <p className="text-xs md:text-sm font-bold text-gray-400 mb-8 uppercase tracking-wider text-center">

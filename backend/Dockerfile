@@ -1,26 +1,22 @@
-FROM node:22-alpine
+FROM node:20-alpine
 
-# Set working directory
 WORKDIR /app
 
 # Copy package files
 COPY package*.json ./
 
-# Install production dependencies
-RUN npm ci --omit=dev
+# Install dependencies
+RUN npm install --legacy-peer-deps
 
 # Copy source code
 COPY . .
 
-# Run as non-root user
-USER node
+# Environment
+ENV NODE_ENV=production
+ENV PORT=5000
 
 # Application port
-EXPOSE 3001
+EXPOSE 5000
 
-# Container health check
-HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-    CMD wget -q --spider http://127.0.0.1:3001/ || exit 1
-
-# Start application
-CMD ["npm", "start"]
+# Start backend server
+CMD ["node", "server.js"]

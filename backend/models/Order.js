@@ -8,16 +8,15 @@ const orderSchema = new mongoose.Schema({
     },
     orderItems: [
         {
-            name: { type: String, required: true },
-            qty: { type: Number, required: true },
-            image: { type: String },
-            price: { type: Number, required: true },
-            size: { type: String },
-            color: { type: String },
+            name: { type: String, default: 'Dyne Test Product' },
+            qty: { type: Number, default: 1 },
+            image: { type: String, default: '' },
+            price: { type: Number, default: 0 },
+            size: { type: String, default: '' },
+            color: { type: String, default: '' },
             product: {
-                type: mongoose.Schema.Types.ObjectId,
-                ref: 'Product',
-                required: true
+                type: mongoose.Schema.Types.Mixed,
+                required: false
             }
         }
     ],
@@ -31,7 +30,7 @@ const orderSchema = new mongoose.Schema({
     paymentMethod: {
         type: String,
         required: true,
-        enum: ['COD', 'UPI', 'RAZORPAY']
+        default: 'INVOICE'
     },
     payment: {
         type: mongoose.Schema.Types.ObjectId,

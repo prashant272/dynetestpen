@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { API_BASE_URL } from '../../api';
-import { Eye, X, Trash2, Phone, Mail, MapPin, GraduationCap, Building2 } from 'lucide-react';
+import { Eye, X, Trash2, Mail, Phone, Building2 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import SEO from '../../components/SEO';
 import TableSkeleton from '../../components/skeletons/TableSkeleton';
@@ -69,82 +69,95 @@ const EnquiryManagement = () => {
 
     const getStatusStyles = (status) => {
         switch (status) {
-            case 'resolved': return 'bg-green-500/20 text-green-400 border-green-500/30';
-            case 'in_progress': return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
-            case 'spam': return 'bg-red-500/20 text-red-400 border-red-500/30';
+            case 'resolved': return 'bg-green-50 text-green-700 border-green-200';
+            case 'in_progress': return 'bg-blue-50 text-blue-700 border-blue-200';
+            case 'spam': return 'bg-red-50 text-red-700 border-red-200';
             case 'pending':
-            default: return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
+            default: return 'bg-amber-50 text-amber-700 border-amber-200';
         }
     };
 
     return (
         <div className="space-y-6">
-            <SEO title="Enquiry Management" />
+            <SEO title="RFQ & Inquiries | ImageTech Admin" />
             <div className="flex justify-between items-center">
-                <h1 className="text-3xl font-black text-white">Inquiries</h1>
-                <div className="text-white">
-                    Total: <span className="text-primary font-bold">{enquiries.length}</span>
+                <div>
+                    <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-[#172B4D]">RFQ & Client Leads</h1>
+                    <p className="text-gray-500 text-sm font-medium mt-1">Quotations and customer contact inquiries received from ImageTech portal.</p>
+                </div>
+                <div className="text-sm font-semibold text-gray-700 bg-white border border-[#DCE5EF] px-4 py-2 rounded-xl shadow-xs">
+                    Total Leads: <span className="text-[#0D6EFD] font-bold">{enquiries.length}</span>
                 </div>
             </div>
 
             {loading ? (
                 <TableSkeleton columns={6} rows={8} />
             ) : (
-                <div className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden">
+                <div className="bg-white border border-[#DCE5EF] rounded-2xl overflow-hidden shadow-xs">
                     <div className="overflow-x-auto">
-                        <table className="w-full">
-                            <thead className="bg-white/5">
+                        <table className="w-full text-left text-sm">
+                            <thead className="bg-[#F8FAFC] border-b border-[#DCE5EF] text-gray-600 text-xs font-bold uppercase tracking-wider">
                                 <tr>
-                                    <th className="px-6 py-4 text-left text-xs font-bold text-primary uppercase tracking-wider">Name</th>
-                                    <th className="px-6 py-4 text-left text-xs font-bold text-primary uppercase tracking-wider">Email</th>
-                                    <th className="px-6 py-4 text-left text-xs font-bold text-primary uppercase tracking-wider">Message</th>
-                                    <th className="px-6 py-4 text-left text-xs font-bold text-primary uppercase tracking-wider">Status</th>
-                                    <th className="px-6 py-4 text-left text-xs font-bold text-primary uppercase tracking-wider">Date</th>
-                                    <th className="px-6 py-4 text-left text-xs font-bold text-primary uppercase tracking-wider">Actions</th>
+                                    <th className="px-6 py-4">Client Name</th>
+                                    <th className="px-6 py-4">Company & Phone</th>
+                                    <th className="px-6 py-4">Email</th>
+                                    <th className="px-6 py-4">Inquiry / RFQ Message</th>
+                                    <th className="px-6 py-4">Status</th>
+                                    <th className="px-6 py-4">Date</th>
+                                    <th className="px-6 py-4 text-right">Actions</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-white/10">
+                            <tbody className="divide-y divide-[#DCE5EF]">
                                 {enquiries.length === 0 ? (
                                     <tr>
-                                        <td colSpan="6" className="px-6 py-12 text-center text-white">
-                                            No inquiries yet
+                                        <td colSpan="7" className="px-6 py-12 text-center text-gray-500">
+                                            No RFQ leads received yet.
                                         </td>
                                     </tr>
                                 ) : (
                                     enquiries.map((enquiry) => (
-                                        <tr key={enquiry._id} className="hover:bg-white/5 transition-colors">
-                                            <td className="px-6 py-4 text-white font-medium">{enquiry.name}</td>
-                                            <td className="px-6 py-4 text-white text-sm">{enquiry.email}</td>
+                                        <tr key={enquiry._id} className="hover:bg-[#F8FAFC] transition-colors">
+                                            <td className="px-6 py-4 text-[#172B4D] font-bold">{enquiry.name}</td>
                                             <td className="px-6 py-4">
-                                                <p className="text-gray-300 text-sm truncate max-w-[200px]">{enquiry.message}</p>
+                                                <div className="text-[#172B4D] font-medium">{enquiry.company || '—'}</div>
+                                                <div className="text-xs text-gray-500">{enquiry.phone || '—'}</div>
+                                            </td>
+                                            <td className="px-6 py-4 text-gray-700 text-xs font-mono">{enquiry.email}</td>
+                                            <td className="px-6 py-4">
+                                                <p className="text-gray-700 text-xs truncate max-w-[220px]">{enquiry.message || enquiry.subject}</p>
                                             </td>
                                             <td className="px-6 py-4">
                                                 <select
                                                     value={enquiry.status}
                                                     onChange={(e) => handleStatusChange(enquiry._id, e.target.value)}
-                                                    className={`px-3 py-1 rounded-lg text-xs font-bold cursor-pointer outline-none border ${getStatusStyles(enquiry.status)}`}
+                                                    className={`px-2.5 py-1 rounded-lg text-xs font-bold cursor-pointer outline-none border ${getStatusStyles(enquiry.status)}`}
                                                 >
-                                                    <option value="pending" className="bg-dark text-white">Pending</option>
-                                                    <option value="in_progress" className="bg-dark text-white">In Progress</option>
-                                                    <option value="resolved" className="bg-dark text-white">Resolved</option>
-                                                    <option value="spam" className="bg-dark text-white">Spam</option>
+                                                    <option value="pending">Pending</option>
+                                                    <option value="in_progress">In Progress</option>
+                                                    <option value="resolved">Resolved</option>
+                                                    <option value="spam">Spam</option>
                                                 </select>
                                             </td>
-                                            <td className="px-6 py-4 text-white text-sm">
-                                                {new Date(enquiry.createdAt).toLocaleDateString()}
+                                            <td className="px-6 py-4 text-gray-500 text-xs whitespace-nowrap">
+                                                {new Date(enquiry.createdAt).toLocaleDateString('en-IN', {
+                                                    day: '2-digit',
+                                                    month: 'short',
+                                                    year: 'numeric'
+                                                })}
                                             </td>
-                                            <td className="px-6 py-4">
-                                                <div className="flex gap-2">
+                                            <td className="px-6 py-4 text-right">
+                                                <div className="flex justify-end gap-1.5">
                                                     <button
                                                         onClick={() => viewDetails(enquiry)}
-                                                        className="flex items-center gap-2 px-3 py-2 bg-primary/10 text-primary hover:bg-primary hover:text-dark rounded-lg transition-all font-bold text-sm"
+                                                        className="p-2 text-[#0D6EFD] hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
+                                                        title="View Details"
                                                     >
                                                         <Eye className="w-4 h-4" />
-                                                        View
                                                     </button>
                                                     <button
                                                         onClick={() => handleDelete(enquiry._id)}
-                                                        className="flex items-center gap-2 px-3 py-2 bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white rounded-lg transition-all font-bold text-sm"
+                                                        className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+                                                        title="Delete Inquiry"
                                                     >
                                                         <Trash2 className="w-4 h-4" />
                                                     </button>
@@ -161,77 +174,84 @@ const EnquiryManagement = () => {
 
             {/* Detail Modal */}
             {showDetailModal && selectedEnquiry && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center px-4 overflow-y-auto py-10">
-                    <div
-                        className="fixed inset-0 bg-gray-900/80 backdrop-blur-sm"
-                        onClick={() => setShowDetailModal(false)}
-                    />
-                    <div className="bg-dark border border-white/20 relative w-full max-w-2xl p-0 rounded-3xl shadow-2xl z-10 max-h-[90vh] flex flex-col">
-                        <div className="p-8 pb-0 flex justify-between items-center shrink-0">
-                            <h2 className="text-3xl font-black text-white">Inquiry Details</h2>
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-in fade-in">
+                    <div className="bg-white border border-[#DCE5EF] relative w-full max-w-2xl rounded-2xl shadow-2xl flex flex-col overflow-hidden">
+                        <div className="p-6 border-b border-[#DCE5EF] flex justify-between items-center bg-[#F8FAFC]">
+                            <div>
+                                <h2 className="text-xl font-bold text-[#172B4D]">Lead Inquiry Details</h2>
+                                <p className="text-xs text-gray-500 mt-0.5">Submitted on {new Date(selectedEnquiry.createdAt).toLocaleString('en-IN')}</p>
+                            </div>
                             <button
                                 onClick={() => setShowDetailModal(false)}
-                                className="p-2 text-white hover:text-white hover:bg-white/10 rounded-xl transition-all"
+                                className="p-1 text-gray-400 hover:text-[#172B4D] hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
                             >
-                                <X className="w-6 h-6" />
+                                <X className="w-5 h-5" />
                             </button>
                         </div>
 
-                        <div className="p-8 overflow-y-auto custom-scrollbar">
-                            <div className="bg-white/5 border border-white/10 rounded-2xl p-6 space-y-6">
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="text-gray-400 text-xs font-bold uppercase tracking-wider block mb-1">Name</label>
-                                        <p className="text-white font-bold text-lg">{selectedEnquiry.name}</p>
-                                    </div>
-                                    <div>
-                                        <label className="text-gray-400 text-xs font-bold uppercase tracking-wider block mb-1">Email</label>
-                                        <div className="flex items-center gap-2 text-white font-bold text-lg">
-                                            <Mail className="w-4 h-4 text-primary" />
-                                            {selectedEnquiry.email}
-                                        </div>
+                        <div className="p-6 space-y-5 overflow-y-auto max-h-[75vh]">
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="bg-[#F8FAFC] p-3.5 rounded-xl border border-[#DCE5EF]">
+                                    <label className="text-gray-500 text-xs font-bold uppercase tracking-wider block mb-1">Client Name</label>
+                                    <p className="text-[#172B4D] font-bold text-base">{selectedEnquiry.name}</p>
+                                </div>
+                                <div className="bg-[#F8FAFC] p-3.5 rounded-xl border border-[#DCE5EF]">
+                                    <label className="text-gray-500 text-xs font-bold uppercase tracking-wider block mb-1">Company / Organization</label>
+                                    <p className="text-[#172B4D] font-bold text-base">{selectedEnquiry.company || '—'}</p>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="bg-[#F8FAFC] p-3.5 rounded-xl border border-[#DCE5EF]">
+                                    <label className="text-gray-500 text-xs font-bold uppercase tracking-wider block mb-1">Email</label>
+                                    <div className="flex items-center gap-2 text-gray-800 font-semibold text-sm">
+                                        <Mail className="w-4 h-4 text-[#0D6EFD]" />
+                                        <a href={`mailto:${selectedEnquiry.email}`} className="hover:underline">{selectedEnquiry.email}</a>
                                     </div>
                                 </div>
-
-                                <div>
-                                    <label className="text-gray-400 text-xs font-bold uppercase tracking-wider block mb-2">Message</label>
-                                    <div className="bg-black/20 rounded-xl p-4 border border-white/5">
-                                        <p className="text-white whitespace-pre-wrap">{selectedEnquiry.message}</p>
-                                    </div>
-                                </div>
-
-                                <div className="grid grid-cols-2 gap-4 pt-4 border-t border-white/10">
-                                    <div>
-                                        <label className="text-gray-400 text-xs font-bold uppercase tracking-wider block mb-2">Status</label>
-                                        <select
-                                            value={selectedEnquiry.status}
-                                            onChange={(e) => {
-                                                handleStatusChange(selectedEnquiry._id, e.target.value);
-                                            }}
-                                            className={`px-4 py-2 rounded-lg font-bold cursor-pointer outline-none border ${getStatusStyles(selectedEnquiry.status)}`}
-                                        >
-                                            <option value="pending" className="bg-dark text-white">Pending</option>
-                                            <option value="in_progress" className="bg-dark text-white">In Progress</option>
-                                            <option value="resolved" className="bg-dark text-white">Resolved</option>
-                                            <option value="spam" className="bg-dark text-white">Spam</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label className="text-gray-400 text-xs font-bold uppercase tracking-wider block mb-1">Submitted On</label>
-                                        <p className="text-white font-bold">
-                                            {new Date(selectedEnquiry.createdAt).toLocaleString()}
-                                        </p>
+                                <div className="bg-[#F8FAFC] p-3.5 rounded-xl border border-[#DCE5EF]">
+                                    <label className="text-gray-500 text-xs font-bold uppercase tracking-wider block mb-1">Phone</label>
+                                    <div className="flex items-center gap-2 text-gray-800 font-semibold text-sm">
+                                        <Phone className="w-4 h-4 text-[#0D6EFD]" />
+                                        <a href={`tel:${selectedEnquiry.phone}`} className="hover:underline">{selectedEnquiry.phone || '—'}</a>
                                     </div>
                                 </div>
                             </div>
 
-                            {/* Delete Button */}
-                            <div className="mt-8 flex justify-end">
+                            {selectedEnquiry.subject && (
+                                <div className="bg-[#F8FAFC] p-3.5 rounded-xl border border-[#DCE5EF]">
+                                    <label className="text-gray-500 text-xs font-bold uppercase tracking-wider block mb-1">Subject</label>
+                                    <p className="text-[#172B4D] font-semibold text-sm">{selectedEnquiry.subject}</p>
+                                </div>
+                            )}
+
+                            <div>
+                                <label className="text-gray-500 text-xs font-bold uppercase tracking-wider block mb-2">Message / Requirement</label>
+                                <div className="bg-[#F8FAFC] rounded-xl p-4 border border-[#DCE5EF]">
+                                    <p className="text-gray-800 text-sm whitespace-pre-wrap leading-relaxed">{selectedEnquiry.message || 'No additional message provided.'}</p>
+                                </div>
+                            </div>
+
+                            <div className="flex items-center justify-between pt-4 border-t border-[#DCE5EF]">
+                                <div className="flex items-center gap-3">
+                                    <label className="text-gray-500 text-xs font-bold uppercase tracking-wider">Update Status:</label>
+                                    <select
+                                        value={selectedEnquiry.status}
+                                        onChange={(e) => handleStatusChange(selectedEnquiry._id, e.target.value)}
+                                        className={`px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer outline-none border ${getStatusStyles(selectedEnquiry.status)}`}
+                                    >
+                                        <option value="pending">Pending</option>
+                                        <option value="in_progress">In Progress</option>
+                                        <option value="resolved">Resolved</option>
+                                        <option value="spam">Spam</option>
+                                    </select>
+                                </div>
+
                                 <button
                                     onClick={() => handleDelete(selectedEnquiry._id)}
-                                    className="flex items-center gap-2 px-6 py-3 bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white rounded-xl transition-all font-bold"
+                                    className="flex items-center gap-2 px-4 py-2 bg-red-50 text-red-600 hover:bg-red-100 rounded-xl transition-colors font-semibold text-xs border border-red-200 cursor-pointer"
                                 >
-                                    <Trash2 className="w-5 h-5" />
+                                    <Trash2 className="w-4 h-4" />
                                     Delete Inquiry
                                 </button>
                             </div>

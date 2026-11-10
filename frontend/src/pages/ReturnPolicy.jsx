@@ -1,58 +1,83 @@
 import React from 'react';
+import { ShieldCheck, RotateCcw, AlertTriangle, CheckCircle2, Award } from 'lucide-react';
 import SEO from '../components/SEO';
 
 const ReturnPolicy = () => {
     return (
-    <div className="pt-4 pb-20 min-h-screen bg-[#fdfaf7] font-sans">
-      <SEO 
-        title="Return Policy"
-        description="Learn about Ownvibes's 15-Day Happiness Guarantee. Read our return and refund policy for t-shirts."
-      />
+        <main className="pt-8 pb-20 min-h-screen bg-[#F5F8FC] font-sans">
+            <SEO
+                title="Quality Assurance & Replacement Policy | ImageTech Industries"
+                description="ImageTech Industries ISO 9001:2015 quality guarantee, calibration variance replacements, and industrial return guidelines."
+            />
+
             <div className="max-w-4xl mx-auto px-4">
-                <div className="text-center mb-12">
-                    <h1 className="text-4xl md:text-5xl font-black text-[#1c1c1c] tracking-tight mb-4">Returns & Refunds</h1>
-                    <p className="text-lg text-gray-500 font-medium">
-                        Not the perfect match? Let's make it right.
-                    </p>
-                </div>
                 
-                <div className="bg-white rounded-[30px] p-8 md:p-12 shadow-xl shadow-[#cf7e28]/5 border border-[#f5eadb]">
-                    <div className="space-y-8 text-[#483d36] leading-relaxed">
-                        <section>
-                            <h2 className="text-2xl font-extrabold text-[#1c1c1c] mb-4">Our 15-Day Happiness Guarantee</h2>
-                            <p>
-                                We want you to love your Ownvibes t-shirt as much as we loved making it. If you or your little one are not completely satisfied with your purchase, you can return it within 15 days of receiving your order for a full refund or exchange.
-                            </p>
-                        </section>
-
-                        <section>
-                            <h2 className="text-2xl font-extrabold text-[#1c1c1c] mb-4">Return Conditions</h2>
-                            <ul className="list-disc pl-5 space-y-2">
-                                <li>The item must be in its original, unused, and unwashed condition.</li>
-                                <li>All original tags and packaging must be intact.</li>
-                                <li>Customized or personalized t-shirts are not eligible for returns unless there is a manufacturing defect.</li>
-                            </ul>
-                        </section>
-
-                        <section>
-                            <h2 className="text-2xl font-extrabold text-[#1c1c1c] mb-4">How to Initiate a Return</h2>
-                            <ol className="list-decimal pl-5 space-y-2">
-                                <li>Email us at <strong>info@ownvibes.com</strong> with your Order ID and reason for return.</li>
-                                <li>Our team will respond within 24 hours with a return authorization and a prepaid shipping label (for defective items) or shipping instructions (for general returns).</li>
-                                <li>Pack the clothing item securely and hand it over to the courier partner.</li>
-                            </ol>
-                        </section>
-
-                        <section>
-                            <h2 className="text-2xl font-extrabold text-[#1c1c1c] mb-4">Refunds</h2>
-                            <p>
-                                Once your return is received and inspected, we will send you an email to notify you that we have received your returned item. If approved, your refund will be processed, and a credit will automatically be applied to your credit card or original method of payment within 5-7 business days.
-                            </p>
-                        </section>
+                <header className="text-center mb-10">
+                    <div className="inline-flex items-center gap-1.5 bg-[#0B3B6F]/10 text-[#0B3B6F] text-xs font-bold uppercase tracking-wider px-3.5 py-1 rounded-full mb-3">
+                        <Award size={14} />
+                        <span>ISO 9001:2015 Quality Commitment</span>
                     </div>
-                </div>
+                    <h1 className="text-3xl md:text-4xl font-black text-[#172B4D] tracking-tight mb-2">
+                        Quality Assurance &amp; Return Policy
+                    </h1>
+                    <p className="text-xs md:text-sm text-gray-500">
+                        100% batch calibration accuracy backed by comprehensive laboratory replacement support.
+                    </p>
+                </header>
+
+                <article className="bg-white rounded-2xl p-6 sm:p-10 border border-[#DCE5EF] shadow-xs space-y-8 text-xs md:text-sm text-gray-600 leading-relaxed">
+                    
+                    <section>
+                        <h2 className="text-base font-bold text-[#0B3B6F] uppercase tracking-wider pb-2 mb-3 border-b border-gray-100 flex items-center gap-2">
+                            <ShieldCheck size={18} className="text-[#0D6EFD]" />
+                            100% Quality &amp; Accuracy Guarantee
+                        </h2>
+                        <p className="mb-2">
+                            Every <strong>MAGNET Dyne Test Pen</strong> and <strong>Dyne Test Ink</strong> batch produced by ImageTech Industries undergoes analytical surface tension verification using digital tensiometers before leaving our laboratory.
+                        </p>
+                        <p>
+                            If any sealed product exhibits an unexpected calibration variance from the ASTM D2578 / ISO 8296 certified tolerance (±0.5 Dyne/cm), ImageTech will arrange immediate complimentary replacement or commercial credit.
+                        </p>
+                    </section>
+
+                    <section>
+                        <h2 className="text-base font-bold text-[#0B3B6F] uppercase tracking-wider pb-2 mb-3 border-b border-gray-100 flex items-center gap-2">
+                            <RotateCcw size={18} className="text-[#0D6EFD]" />
+                            Replacement &amp; Transit Claims Process
+                        </h2>
+                        <ul className="space-y-3">
+                            <li className="flex items-start gap-2.5">
+                                <CheckCircle2 size={16} className="text-green-600 shrink-0 mt-0.5" />
+                                <div>
+                                    <strong>Transit Damage or Leakage:</strong> Report within 48 hours of shipment delivery with photographs of packaging to <span className="font-semibold text-[#0B3B6F]">sales@imagetechindustries.com</span>. We dispatch expedited replacements immediately.
+                                </div>
+                            </li>
+                            <li className="flex items-start gap-2.5">
+                                <CheckCircle2 size={16} className="text-green-600 shrink-0 mt-0.5" />
+                                <div>
+                                    <strong>Incorrect Specification Dispatch:</strong> If delivered dyne values or blade profiles differ from your approved Purchase Order, replacement stock is sent via Priority Air Freight at our expense.
+                                </div>
+                            </li>
+                            <li className="flex items-start gap-2.5">
+                                <CheckCircle2 size={16} className="text-green-600 shrink-0 mt-0.5" />
+                                <div>
+                                    <strong>Shelf Life &amp; Storage Conditions:</strong> Pens must be stored capped between 15°C and 25°C away from direct sunlight. Claims must cite the printed batch number on the container.
+                                </div>
+                            </li>
+                        </ul>
+                    </section>
+
+                    <section className="bg-[#F5F8FC] p-4 rounded-xl border border-[#DCE5EF]">
+                        <h3 className="font-bold text-xs text-[#172B4D] mb-1">Commercial Returns &amp; Restocking</h3>
+                        <p className="text-xs text-gray-500">
+                            Because chemical reagents and surface tension fluids are sensitive to environmental contamination once opened, unsealed liquid containers cannot be restocked for general sale. Unopened, intact master cases may be returned within 14 days subject to standard commercial restocking inspection.
+                        </p>
+                    </section>
+
+                </article>
+
             </div>
-        </div>
+        </main>
     );
 };
 

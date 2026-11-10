@@ -188,7 +188,7 @@ const ProfilePage = () => {
 
     return (
         <div className="min-h-screen bg-[#fdfaf7] pt-12 pb-20 font-sans">
-            <SEO title="My Profile | Ownvibes" noindex={true} />
+            <SEO title="My Account | ImageTech Industries" noindex={true} />
             <div className="max-w-[1200px] mx-auto px-4 md:px-8">
                 <div className="mb-12">
                     <h1 className="text-4xl md:text-5xl font-black text-[#1c1c1c] mb-3 tracking-tight">

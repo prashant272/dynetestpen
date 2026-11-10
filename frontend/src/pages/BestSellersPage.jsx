@@ -94,16 +94,16 @@ const BestSellersPage = () => {
     const collectionSchema = {
         "@context": "https://schema.org",
         "@type": "CollectionPage",
-        "name": "Ownvibes Best Sellers",
-        "description": "Our most loved premium t-shirts and t-shirts.",
-        "url": "https://www.ownvibes.in/best-sellers"
+        "name": "ImageTech Best Sellers",
+        "description": "Our most popular MAGNET Dyne Test Pens and Inks.",
+        "url": "https://www.imagetechindustries.com/best-sellers"
     };
 
     return (
-        <div className="bg-[#fdfdfc] min-h-screen font-sans">
+        <div className="bg-[#F5F8FC] min-h-screen font-sans">
             <SEO
-                title="Best Sellers"
-                description="Our most loved premium t-shirts and t-shirts."
+                title="Best Sellers | ImageTech Industries"
+                description="Our most popular MAGNET Dyne Test Pens, Inks, and Doctor Blades."
                 schema={[collectionSchema, itemListSchema]}
             />
             {/* Premium Full-Width Header */}

@@ -1,7 +1,7 @@
 import Blog from '../models/Blog.js';
-import { uploadFileToS3, getPresignedUrl, deleteFromS3 } from '../utils/s3Storage.js';
+import { uploadToS3, getPresignedUrl, deleteFromS3 } from '../utils/s3.js';
 import multer from 'multer';
-
+import FacebookConfig from '../models/FacebookConfig.js';
 // Configure multer for memory storage
 const storage = multer.memoryStorage();
 export const upload = multer({
@@ -16,6 +16,75 @@ export const upload = multer({
     }
 });
 
+// Helper: lazily load GoogleGenAI if needed
+const getGenAI = async () => {
+    try {
+        const { GoogleGenAI } = await import('@google/genai');
+        return GoogleGenAI;
+    } catch {
+        return null;
+    }
+};
+const triggerFacebookPost = async (blog) => {
+    try {
+        const config = await FacebookConfig.findOne();
+        if (!config || !config.pageAccessToken) return;
+
+        const liveDomain = "https://www.careercommando.in";
+        const blogUrl = `${liveDomain}/blog/${blog.slug}`;
+        const caption = `🌟 ${blog.title}\n\n${blog.excerpt}\n\n🔗 Read more: ${blogUrl}`;
+
+        let fbData;
+
+        // If blog has a thumbnail, post with photo
+        if (blog.thumbnailUrl) {
+            // Generate a fresh presigned URL so Facebook can fetch the image
+            let imageUrl = blog.thumbnailUrl;
+            if (blog.thumbnailUrl.startsWith('career-commando/')) {
+                try {
+                    imageUrl = await getPresignedUrl(blog.thumbnailUrl);
+                } catch (e) {
+                    console.warn('Could not generate presigned URL for FB post:', e.message);
+                }
+            }
+
+            // POST to /photos — uploads image + caption together
+            const photoResponse = await fetch(`https://graph.facebook.com/v19.0/${config.pageId}/photos`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    url: imageUrl,
+                    caption: caption,
+                    access_token: config.pageAccessToken
+                })
+            });
+
+            fbData = await photoResponse.json();
+        } else {
+            // Fallback: text + link post (no image)
+            const feedResponse = await fetch(`https://graph.facebook.com/v19.0/${config.pageId}/feed`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    message: caption,
+                    link: blogUrl,
+                    access_token: config.pageAccessToken
+                })
+            });
+
+            fbData = await feedResponse.json();
+        }
+
+        if (fbData.error) {
+            console.error('FB Auto-Post Graph Error:', fbData.error.message);
+        } else {
+            console.log(`✅ Auto-posted to Facebook with photo: ${fbData.id || fbData.post_id}`);
+        }
+    } catch (error) {
+        console.error('Error triggering FB Post:', error);
+    }
+};
+
 /**
  * Get cached presigned URL or generate new one if expired
  * @param {Object} blog - Blog document
@@ -26,11 +95,13 @@ async function getCachedOrGenerateUrl(blog) {
 
     // Check if we have a valid cached URL
     if (blog.cachedPresignedUrl && blog.urlExpiresAt && blog.urlExpiresAt > now) {
+        console.log(`✓ Using cached URL for blog: ${blog.slug}`);
         return { url: blog.cachedPresignedUrl, updated: false };
     }
 
     try {
         // Generate new presigned URL
+        console.log(`⟳ Generating new presigned URL for blog: ${blog.slug}`);
         const presignedUrl = await getPresignedUrl(blog.thumbnailUrl);
 
         // Cache expires in 7 days (same as presigned URL validity)
@@ -78,14 +149,16 @@ export const getBlogs = async (req, res) => {
         }
 
         const blogs = await Blog.find(filter)
-            .sort({ publishedDate: -1 });
+            .sort({ publishedDate: -1 })
+            .select('-content')
+            .populate('category', 'name slug'); // Exclude full content in list view
 
         // Generate presigned URLs for thumbnails (with caching)
         const blogsToUpdate = [];
         const blogsWithUrls = await Promise.all(
             blogs.map(async (blog) => {
                 const blogObj = blog.toObject();
-                if (blogObj.thumbnailUrl && (blogObj.thumbnailUrl.startsWith('career-commando/') || blogObj.thumbnailUrl.startsWith('ecommerce/'))) {
+                if (blogObj.thumbnailUrl && blogObj.thumbnailUrl.startsWith('career-commando/')) {
                     // Use cached URL or generate new one
                     const { url, updated } = await getCachedOrGenerateUrl(blog);
                     blogObj.thumbnailUrl = url;
@@ -102,6 +175,7 @@ export const getBlogs = async (req, res) => {
         // Batch save all blogs with updated cache
         if (blogsToUpdate.length > 0) {
             await Promise.all(blogsToUpdate.map(blog => blog.save()));
+            console.log(`💾 Saved ${blogsToUpdate.length} blog(s) with updated cache`);
         }
 
         res.json(blogsWithUrls);
@@ -117,7 +191,7 @@ export const getBlogs = async (req, res) => {
 export const getBlogBySlug = async (req, res) => {
     try {
         const { lang = 'en' } = req.query; // Default to English
-        const blog = await Blog.findOne({ slug: req.params.slug });
+        const blog = await Blog.findOne({ slug: req.params.slug }).populate('category', 'name slug');
 
         if (!blog) {
             return res.status(404).json({ message: 'Blog not found' });
@@ -130,7 +204,7 @@ export const getBlogBySlug = async (req, res) => {
         const blogObj = blog.toObject();
         let cacheUpdated = false;
 
-        if (blogObj.thumbnailUrl && (blogObj.thumbnailUrl.startsWith('career-commando/') || blogObj.thumbnailUrl.startsWith('ecommerce/'))) {
+        if (blogObj.thumbnailUrl && blogObj.thumbnailUrl.startsWith('career-commando/')) {
             try {
                 const { url, updated } = await getCachedOrGenerateUrl(blog);
                 blogObj.thumbnailUrl = url;
@@ -151,6 +225,7 @@ export const getBlogBySlug = async (req, res) => {
 
         // Check if translation exists in cache
         if (blog.translations && blog.translations.has(lang)) {
+            console.log(`📦 Serving cached translation for ${lang}`);
             const cachedTranslation = blog.translations.get(lang);
 
             // Return blog with translated content
@@ -165,6 +240,7 @@ export const getBlogBySlug = async (req, res) => {
         }
 
         // Translation not cached, call Google Translate API
+        console.log(`🌐 Translation not cached, calling Google Translate API for ${lang}...`);
         const { translateBlog } = await import('../services/translateService.js');
 
         const translatedContent = await translateBlog(blog, lang);
@@ -175,6 +251,8 @@ export const getBlogBySlug = async (req, res) => {
         }
         blog.translations.set(lang, translatedContent);
         await blog.save();
+
+        console.log(`✅ Translation cached successfully for ${lang}`);
 
         // Return translated blog
         res.json({
@@ -203,6 +281,12 @@ export const createBlog = async (req, res) => {
             return res.status(400).json({ message: 'Title, excerpt, and content are required' });
         }
 
+        let finalExcerpt = excerpt;
+        if (finalExcerpt.length > 300) {
+            finalExcerpt = finalExcerpt.substring(0, 297) + '...';
+        }
+
+
         // Create slug from title
         const slug = title
             .toLowerCase()
@@ -218,15 +302,21 @@ export const createBlog = async (req, res) => {
         const blog = new Blog({
             title,
             slug,
-            excerpt,
+            excerpt: finalExcerpt,
             content,
             thumbnailUrl: thumbnailUrl || '',
             category: category || 'General',
-            tags: tags ? tags.split(',').map(tag => tag.trim()) : [],
+            tags: Array.isArray(tags) ? tags : (tags ? tags.split(',').map(tag => tag.trim()) : []),
             status: status || 'draft'
         });
 
         await blog.save();
+        
+        // Auto-post to Facebook if published
+        if (blog.status === 'published') {
+            triggerFacebookPost(blog);
+        }
+        
         res.status(201).json(blog);
     } catch (error) {
         console.error('Create Blog Error:', error);
@@ -254,15 +344,23 @@ export const updateBlog = async (req, res) => {
                 .replace(/[^a-z0-9]+/g, '-')
                 .replace(/(^-|-$)/g, '');
         }
-        if (excerpt) blog.excerpt = excerpt;
+        if (excerpt) {
+            blog.excerpt = excerpt.length > 300 ? excerpt.substring(0, 297) + '...' : excerpt;
+        }
         if (content) blog.content = content;
         if (category) blog.category = category;
-        if (tags) blog.tags = tags.split(',').map(tag => tag.trim());
+        if (tags) blog.tags = Array.isArray(tags) ? tags : tags.split(',').map(tag => tag.trim());
+        const wasDraft = blog.status !== 'published';
         if (status) blog.status = status;
         if (thumbnailUrl !== undefined) blog.thumbnailUrl = thumbnailUrl;
 
-
         await blog.save();
+
+        // Auto-post to Facebook if transitioned to published
+        if (wasDraft && blog.status === 'published') {
+            triggerFacebookPost(blog);
+        }
+
         res.json(blog);
     } catch (error) {
         console.error('Update Blog Error:', error);
@@ -281,7 +379,7 @@ export const deleteBlog = async (req, res) => {
         }
 
         // Delete thumbnail from S3 if exists
-        if (blog.thumbnailUrl && (blog.thumbnailUrl.startsWith('career-commando/') || blog.thumbnailUrl.startsWith('ecommerce/'))) {
+        if (blog.thumbnailUrl) {
             try {
                 await deleteFromS3(blog.thumbnailUrl);
             } catch (error) {
@@ -306,22 +404,239 @@ export const uploadBlogImage = async (req, res) => {
             return res.status(400).json({ message: 'No image file provided' });
         }
 
-        // Upload to ecommerce/ folder (unified behavior)
-        const keyOrUrl = await uploadFileToS3(
+        // Direct buffer upload
+        const newFileName = req.file.originalname;
+        const key = await uploadToS3(
             req.file.buffer,
-            req.file.originalname,
-            req.file.mimetype
+            newFileName,
+            req.file.mimetype || 'image/jpeg'
         );
 
-        // If uploadFileToS3 returns a URL, we might need the key for caching
-        // Let's assume we want to store the key in the DB.
-        // For now, I'll return the URL as 'url' and if it's a URL, the key is the path.
+        // Generate presigned URL for secure access (works with private buckets)
+        const presignedUrl = await getPresignedUrl(key);
 
         res.json({
-            url: keyOrUrl
+            key,
+            url: presignedUrl
         });
     } catch (error) {
         console.error('Upload Image Error:', error);
         res.status(500).json({ message: 'Failed to upload image', error: error.message });
+    }
+};
+
+// @desc    Generate AI Blog
+// @route   POST /api/blogs/generate-ai
+// @access  Private (Admin only)
+export const generateAIBlog = async (req, res) => {
+    try {
+        const { topic } = req.body;
+        
+        if (!topic) {
+            return res.status(400).json({ message: 'Topic is required to generate AI blog' });
+        }
+        
+        if (!process.env.GEMINI_API_KEY) {
+            return res.status(500).json({ message: 'GEMINI_API_KEY not configured in backend' });
+        }
+
+        const GenAIClass = await getGenAI();
+        if (!GenAIClass) {
+            return res.status(500).json({ message: 'Gemini AI library is not available' });
+        }
+        const ai = new GenAIClass({ apiKey: process.env.GEMINI_API_KEY });
+        
+        const systemPrompt = `You are an expert educational content writer. The user will provide ONLY the name of a college or university.
+Your job is to generate a highly comprehensive, detailed, and completely structured blog post about this specific college. 
+IMPORTANT: You MUST write in VERY SIMPLE ENGLISH words so that any student can easily understand it. Avoid heavy jargon.
+
+The content MUST be in HTML format without the \`\`\`html wrapper. Do not wrap the response in markdown blocks. Do not add <html>, <head>, or <body> tags. Just use tags like <h2>, <h3>, <p>, <ul>, <li>, <strong>, <table>, <tr>, <th>, <td>, etc.
+CRITICAL: Whenever displaying data like "Courses Offered & Fees Structure" or "Placement Statistics", you MUST use well-formatted HTML tables.
+
+Include the following sections clearly formatted with headings:
+1. About the College (Introduction, History, Overview)
+2. Location & Campus Life (Infrastructure, Facilities, Hostels)
+3. Courses Offered & Fees Structure (MUST be in an HTML table showing Course Name, Eligibility, Duration, and Fees)
+4. Admission Process & Eligibility (What exams are accepted, how to apply step-by-step)
+5. Placement Statistics (Deep dive into Average Package, Highest Package, Top Recruiters, and past/Next 5-Year placement trends. Use a table for year-wise placement trends if possible.)
+6. Conclusion
+
+Also provide a catchy "title" and a short "excerpt" (STRICTLY LESS THAN 250 characters, plain text).
+Return your response ONLY as a parseable JSON object with keys "title", "excerpt", and "content" (with the HTML string). Do not add any markdown formatting around the JSON block.`;
+
+        const response = await ai.models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: `College Name: ${topic}`,
+            config: {
+                systemInstruction: systemPrompt,
+                responseMimeType: "application/json"
+            }
+        });
+        
+        let responseText = response.text;
+        
+        // Remove markdown JSON wrappers if Gemini accidentally includes them despite the prompt
+        if (responseText.startsWith('\`\`\`json')) {
+            responseText = responseText.replace(/^\`\`\`json\n/, '').replace(/\n\`\`\`$/, '');
+        } else if (responseText.startsWith('\`\`\`')) {
+            responseText = responseText.replace(/^\`\`\`\n/, '').replace(/\n\`\`\`$/, '');
+        }
+
+        const blogData = JSON.parse(responseText);
+
+        // Ensure excerpt is strictly within Mongoose bounds
+        if (blogData.excerpt && blogData.excerpt.length > 300) {
+            blogData.excerpt = blogData.excerpt.substring(0, 297) + '...';
+        }
+
+        res.json(blogData);
+    } catch (error) {
+        console.error('Generate AI Blog Error:', error);
+        res.status(500).json({ message: 'Failed to generate AI blog', error: error.message });
+    }
+};
+
+// @desc    Bulk Generate AI Blogs and save as drafts
+// @route   POST /api/blogs/generate-ai-bulk
+// @access  Private (Admin only)
+export const generateAIBulkBlogs = async (req, res) => {
+    try {
+        const { topics, category = 'General' } = req.body;
+
+        if (!topics || !Array.isArray(topics) || topics.length === 0) {
+            return res.status(400).json({ message: 'topics must be a non-empty array' });
+        }
+        if (topics.length > 10) {
+            return res.status(400).json({ message: 'Maximum 10 topics allowed at once' });
+        }
+        if (!process.env.GEMINI_API_KEY) {
+            return res.status(500).json({ message: 'GEMINI_API_KEY not configured' });
+        }
+
+        const systemPrompt = `You are an expert educational content writer. The user will provide ONLY the name of a college or university.
+Your job is to generate a highly comprehensive, detailed, and completely structured blog post about this specific college. 
+IMPORTANT: You MUST write in VERY SIMPLE ENGLISH words so that any student can easily understand it. Avoid heavy jargon.
+
+The content MUST be in HTML format without the \`\`\`html wrapper. Do not wrap the response in markdown blocks. Do not add <html>, <head>, or <body> tags. Just use tags like <h2>, <h3>, <p>, <ul>, <li>, <strong>, <table>, <tr>, <th>, <td>, etc.
+CRITICAL: Whenever displaying data like "Courses Offered & Fees Structure" or "Placement Statistics", you MUST use well-formatted HTML tables.
+
+Include the following sections clearly formatted with headings:
+1. About the College (Introduction, History, Overview)
+2. Location & Campus Life (Infrastructure, Facilities, Hostels)
+3. Courses Offered & Fees Structure (MUST be in an HTML table showing Course Name, Eligibility, Duration, and Fees)
+4. Admission Process & Eligibility (What exams are accepted, how to apply step-by-step)
+5. Placement Statistics (Deep dive into Average Package, Highest Package, Top Recruiters, and past/Next 5-Year placement trends. Use a table for year-wise placement trends if possible.)
+6. Conclusion
+
+Also provide a catchy "title" and a short "excerpt" (STRICTLY LESS THAN 250 characters, plain text).
+Return your response ONLY as a parseable JSON object with keys "title", "excerpt", and "content" (with the HTML string). Do not add any markdown formatting around the JSON block.`;
+
+        const GenAIClass = await getGenAI();
+        if (!GenAIClass) {
+            return res.status(500).json({ message: 'Gemini AI library is not available' });
+        }
+        const ai = new GenAIClass({ apiKey: process.env.GEMINI_API_KEY });
+
+        const results = [];
+
+        for (let i = 0; i < topics.length; i++) {
+            const topic = topics[i].trim();
+            if (!topic) continue;
+
+            console.log(`📝 Bulk generating [${i + 1}/${topics.length}]: ${topic}`);
+
+            try {
+                // Retry up to 3 times on 503 (server overloaded)
+                let response = null;
+                let lastErr = null;
+                for (let attempt = 1; attempt <= 3; attempt++) {
+                    try {
+                        console.log(`🔄 Attempt ${attempt}/3 for: ${topic}`);
+                        response = await ai.models.generateContent({
+                            model: 'gemini-2.5-flash',
+                            contents: `College Name: ${topic}`,
+                            config: { systemInstruction: systemPrompt, responseMimeType: "application/json" }
+                        });
+                        lastErr = null;
+                        break; // success
+                    } catch (mErr) {
+                        lastErr = mErr;
+                        const is503 = mErr.status === 503 || mErr.message?.includes('503') || mErr.message?.includes('high demand') || mErr.message?.includes('UNAVAILABLE');
+                        if (is503 && attempt < 3) {
+                            const waitSec = attempt * 30; // 30s, 60s
+                            console.warn(`⏳ 503 on attempt ${attempt}. Waiting ${waitSec}s before retry...`);
+                            await new Promise(r => setTimeout(r, waitSec * 1000));
+                        } else {
+                            break;
+                        }
+                    }
+                }
+                if (lastErr) throw lastErr;
+
+                let responseText = response.text;
+                if (responseText.startsWith('```json')) responseText = responseText.replace(/^```json\n/, '').replace(/\n```$/, '');
+                else if (responseText.startsWith('```')) responseText = responseText.replace(/^```\n/, '').replace(/\n```$/, '');
+
+                // Safe JSON parse
+                let blogData;
+                try {
+                    blogData = JSON.parse(responseText);
+                } catch (parseErr) {
+                    throw new Error(`Invalid JSON from AI (truncated response). Try again.`);
+                }
+                if (blogData.excerpt?.length > 300) blogData.excerpt = blogData.excerpt.substring(0, 297) + '...';
+
+                // Create slug
+                const slug = blogData.title
+                    .toLowerCase()
+                    .replace(/[^a-z0-9]+/g, '-')
+                    .replace(/(^-|-$)/g, '');
+
+                // Skip if slug already exists
+                const existing = await Blog.findOne({ slug });
+                if (existing) {
+                    results.push({ topic, status: 'skipped', reason: 'Blog with this title already exists' });
+                    continue;
+                }
+
+                const blog = new Blog({
+                    title: blogData.title,
+                    slug,
+                    excerpt: blogData.excerpt,
+                    content: blogData.content,
+                    category,
+                    status: 'draft',
+                    thumbnailUrl: ''
+                });
+
+                await blog.save();
+                results.push({ topic, status: 'success', title: blogData.title, id: blog._id });
+                console.log(`✅ Saved draft: "${blogData.title}"`);
+
+            } catch (err) {
+                console.error(`❌ Failed for "${topic}":`, err.message);
+                results.push({ topic, status: 'failed', error: err.message });
+            }
+
+            // 5s delay between topics to let server recover
+            if (i < topics.length - 1) {
+                await new Promise(r => setTimeout(r, 5000));
+            }
+        }
+
+        const successCount = results.filter(r => r.status === 'success').length;
+        const failedCount = results.filter(r => r.status === 'failed').length;
+        const skippedCount = results.filter(r => r.status === 'skipped').length;
+
+        res.json({
+            message: `Bulk generation complete: ${successCount} saved, ${failedCount} failed, ${skippedCount} skipped`,
+            successCount,
+            failedCount,
+            skippedCount,
+            results
+        });
+    } catch (error) {
+        console.error('Bulk Generate Error:', error);
+        res.status(500).json({ message: 'Bulk generation failed', error: error.message });
     }
 };

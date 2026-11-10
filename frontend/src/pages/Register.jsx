@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
-import { User, Mail, Phone, Lock, Eye, EyeOff, Loader2, ArrowRight } from 'lucide-react';
+import { User, Mail, Phone, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react';
 import { API_BASE_URL } from '../api';
 import SEO from '../components/SEO';
 import ButtonLoader from '../components/ButtonLoader';
@@ -22,220 +22,189 @@ const Register = () => {
     const location = useLocation();
     const redirect = new URLSearchParams(location.search).get('redirect') || location.state?.from || '/';
 
-    const [step, setStep] = useState(1);
-    const [otp, setOtp] = useState('');
-
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
 
-        if (step === 1) {
-            if (formData.password !== formData.confirmPassword) {
-                return setError('Passwords do not match');
-            }
-            try {
-                setLoading(true);
-                await axios.post(`${API_BASE_URL}/auth/send-register-otp`, {
-                    name: formData.name,
-                    email: formData.email,
-                    phone: formData.phone
-                });
-                setStep(2);
-            } catch (error) {
-                setError(error.response?.data?.message || 'Failed to send OTP');
-            } finally {
-                setLoading(false);
-            }
-        } else {
-            try {
-                setLoading(true);
-                const { data } = await axios.post(`${API_BASE_URL}/auth/verify-register-otp`, {
-                    name: formData.name,
-                    email: formData.email,
-                    phone: formData.phone,
-                    password: formData.password,
-                    otp
-                });
+        if (formData.password !== formData.confirmPassword) {
+            return setError('Passwords do not match');
+        }
 
-                localStorage.setItem('userToken', data.token);
-                localStorage.setItem('userInfo', JSON.stringify(data));
+        if (formData.password.length < 6) {
+            return setError('Password must be at least 6 characters long');
+        }
 
-                if (data.addresses && data.addresses.length > 0) {
-                    const defaultAddr = data.addresses.find(a => a.isDefault) || data.addresses[0];
-                    if (defaultAddr) {
-                        localStorage.setItem('shippingAddress', JSON.stringify(defaultAddr));
-                    }
+        try {
+            setLoading(true);
+            const { data } = await axios.post(`${API_BASE_URL}/auth/register`, {
+                name: formData.name,
+                email: formData.email,
+                phone: formData.phone,
+                password: formData.password,
+            });
+
+            localStorage.setItem('userToken', data.token);
+            localStorage.setItem('userInfo', JSON.stringify(data));
+
+            if (data.addresses && data.addresses.length > 0) {
+                const defaultAddr = data.addresses.find(a => a.isDefault) || data.addresses[0];
+                if (defaultAddr) {
+                    localStorage.setItem('shippingAddress', JSON.stringify(defaultAddr));
                 }
-
-                navigate(redirect, { replace: true });
-            } catch (error) {
-                setError(error.response?.data?.message || 'Verification failed');
-            } finally {
-                setLoading(false);
             }
+
+            navigate(redirect, { replace: true });
+        } catch (err) {
+            setError(err.response?.data?.message || 'Registration failed. Please try again.');
+        } finally {
+            setLoading(false);
         }
     };
 
     return (
-        <div className="min-h-[calc(100vh-80px)] flex items-start justify-center bg-[#fdfaf7] px-4 pt-10 pb-16 font-sans">
-            <SEO title="Register" />
-            <div className="w-full max-w-[480px]">
+        <div className="min-h-[calc(100vh-80px)] flex items-start justify-center bg-[#F5F8FC] px-4 pt-10 pb-16 font-sans">
+            <SEO
+                title="Create Account | ImageTech Industries"
+                description="Register an account with ImageTech Industries for surface tension instruments, dyne test pens and B2B industrial solutions."
+            />
+
+            <div className="w-full max-w-[440px] bg-white border border-[#DCE5EF] rounded-2xl shadow-xl p-8 sm:p-10">
+                {/* Brand Header */}
                 <div className="text-center mb-8">
-                    <h1 className="text-3xl md:text-4xl font-extrabold text-[#1c1c1c] tracking-tight mb-2">
-                        {step === 1 ? 'Create Account' : 'Verify OTP'}
+                    <span className="text-[11px] font-extrabold tracking-[0.25em] text-[#0D6EFD] uppercase block mb-1">
+                        IMAGETECH INDUSTRIES
+                    </span>
+                    <h1 className="text-2xl sm:text-3xl font-extrabold text-[#172B4D] tracking-tight">
+                        Create Account
                     </h1>
+                    <p className="text-gray-500 text-xs sm:text-sm mt-1.5 font-medium">
+                        Join our client network to manage orders and quotes
+                    </p>
                 </div>
 
-                <div className="bg-white border border-[#f5eadb] shadow-xl shadow-[#cf7e28]/5 rounded-[24px] p-8 md:p-10">
-                    {error && (
-                        <div className="bg-red-50 border border-red-100 text-red-500 text-sm font-bold p-4 rounded-xl mb-6 text-center">
-                            {error}
+                {error && (
+                    <div className="mb-6 p-3.5 bg-red-50 border border-red-200 rounded-xl text-red-700 text-xs font-semibold flex items-center gap-2">
+                        <span className="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0"></span>
+                        {error}
+                    </div>
+                )}
+
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    {/* Name */}
+                    <div>
+                        <label className="text-xs font-bold text-gray-700 uppercase tracking-wider block mb-1">Full Name</label>
+                        <div className="relative">
+                            <User className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                            <input
+                                type="text"
+                                required
+                                value={formData.name}
+                                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                placeholder="Enter your full name"
+                                className="w-full bg-[#F8FAFC] border border-[#DCE5EF] rounded-xl pl-10 pr-4 py-2.5 text-sm text-[#172B4D] placeholder:text-gray-400 focus:outline-none focus:border-[#0D6EFD] focus:bg-white transition-all font-medium"
+                            />
                         </div>
-                    )}
+                    </div>
 
-                    <form onSubmit={handleSubmit} className="space-y-4">
-                        {step === 1 ? (
-                            <>
-                                {/* Name */}
-                                <div className="space-y-1.5">
-                                    <label className="text-[13px] font-extrabold text-black">Full Name</label>
-                                    <div className="relative group">
-                                        <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-[#cf7e28] transition-colors" />
-                                        <input
-                                            required
-                                            type="text"
-                                            placeholder="Enter your name"
-                                            value={formData.name}
-                                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                            className="w-full bg-[#fdfaf7] border border-[#f5eadb] rounded-xl py-3.5 pl-11 pr-4 text-[14px] font-bold text-black placeholder-gray-400 focus:bg-white focus:border-[#cf7e28] focus:ring-1 focus:ring-[#cf7e28] outline-none transition-all"
-                                        />
-                                    </div>
-                                </div>
-
-                                {/* Email */}
-                                <div className="space-y-1.5">
-                                    <label className="text-[13px] font-extrabold text-black">Email Address</label>
-                                    <div className="relative group">
-                                        <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-[#cf7e28] transition-colors" />
-                                        <input
-                                            required
-                                            type="email"
-                                            placeholder="your@email.com"
-                                            value={formData.email}
-                                            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                            className="w-full bg-[#fdfaf7] border border-[#f5eadb] rounded-xl py-3.5 pl-11 pr-4 text-[14px] font-bold text-black placeholder-gray-400 focus:bg-white focus:border-[#cf7e28] focus:ring-1 focus:ring-[#cf7e28] outline-none transition-all"
-                                        />
-                                    </div>
-                                </div>
-
-                                {/* Phone */}
-                                <div className="space-y-1.5">
-                                    <label className="text-[13px] font-extrabold text-black">Mobile Number</label>
-                                    <div className="relative group">
-                                        <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-[#cf7e28] transition-colors" />
-                                        <input
-                                            required
-                                            type="tel"
-                                            placeholder="+91 XXXXX XXXXX"
-                                            value={formData.phone}
-                                            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                                            className="w-full bg-[#fdfaf7] border border-[#f5eadb] rounded-xl py-3.5 pl-11 pr-4 text-[14px] font-bold text-black placeholder-gray-400 focus:bg-white focus:border-[#cf7e28] focus:ring-1 focus:ring-[#cf7e28] outline-none transition-all"
-                                        />
-                                    </div>
-                                </div>
-
-                                {/* Password */}
-                                <div className="space-y-1.5">
-                                    <label className="text-[13px] font-extrabold text-black">Secure Password</label>
-                                    <div className="relative group">
-                                        <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-[#cf7e28] transition-colors" />
-                                        <input
-                                            required
-                                            type={showPassword ? "text" : "password"}
-                                            placeholder="••••••••"
-                                            value={formData.password}
-                                            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                                            className="w-full bg-[#fdfaf7] border border-[#f5eadb] rounded-xl py-3.5 pl-11 pr-11 text-[14px] font-bold text-black placeholder-gray-400 focus:bg-white focus:border-[#cf7e28] focus:ring-1 focus:ring-[#cf7e28] outline-none transition-all"
-                                        />
-                                        <button
-                                            type="button"
-                                            onClick={() => setShowPassword(!showPassword)}
-                                            className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-                                        >
-                                            {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                                        </button>
-                                    </div>
-                                </div>
-
-                                {/* Confirm Password */}
-                                <div className="space-y-1.5">
-                                    <label className="text-[13px] font-extrabold text-black">Confirm Password</label>
-                                    <div className="relative group">
-                                        <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-[#cf7e28] transition-colors" />
-                                        <input
-                                            required
-                                            type={showConfirmPassword ? "text" : "password"}
-                                            placeholder="••••••••"
-                                            value={formData.confirmPassword}
-                                            onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                                            className="w-full bg-[#fdfaf7] border border-[#f5eadb] rounded-xl py-3.5 pl-11 pr-11 text-[14px] font-bold text-black placeholder-gray-400 focus:bg-white focus:border-[#cf7e28] focus:ring-1 focus:ring-[#cf7e28] outline-none transition-all"
-                                        />
-                                        <button
-                                            type="button"
-                                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                            className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-                                        >
-                                            {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                                        </button>
-                                    </div>
-                                </div>
-                            </>
-                        ) : (
-                            <>
-                                {/* OTP */}
-                                <div className="space-y-1.5">
-                                    <label className="text-[13px] font-extrabold text-black">Enter OTP Sent via WhatsApp</label>
-                                    <div className="relative group">
-                                        <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-[#cf7e28] transition-colors" />
-                                        <input
-                                            required
-                                            type="text"
-                                            placeholder="123456"
-                                            value={otp}
-                                            onChange={(e) => setOtp(e.target.value)}
-                                            className="w-full bg-[#fdfaf7] border border-[#f5eadb] rounded-xl py-3.5 pl-11 pr-4 text-[14px] font-bold text-black tracking-widest placeholder-gray-400 focus:bg-white focus:border-[#cf7e28] focus:ring-1 focus:ring-[#cf7e28] outline-none transition-all"
-                                        />
-                                    </div>
-                                </div>
-                            </>
-                        )}
-
-                        {/* Submit */}
-                        <button
-                            disabled={loading}
-                            type="submit"
-                            className="w-full bg-[#cf7e28] hover:bg-[#b56e22] text-white font-bold py-4 rounded-xl flex items-center justify-center gap-2 transition-colors mt-8 shadow-md shadow-[#cf7e28]/20 disabled:opacity-90 disabled:pointer-events-none"
-                        >
-                            {loading ? <ButtonLoader text={step === 1 ? 'Sending OTP to WhatsApp' : 'Verifying OTP'} /> : <>{step === 1 ? 'Send OTP via WhatsApp' : 'Verify & Register'} <ArrowRight className="w-5 h-5" /></>}
-                        </button>
-                    </form>
-
-                    {/* Login Link */}
-                    {step === 1 && (
-                        <div className="mt-8 text-center border-t border-gray-100 pt-6">
-                            <p className="text-gray-500 text-[14px]">
-                                Already have an account?{" "}
-                                <Link to={redirect && redirect !== '/' ? `/login?redirect=${encodeURIComponent(redirect)}` : "/login"} className="text-[#cf7e28] font-bold hover:underline">
-                                    Login here
-                                </Link>
-                            </p>
+                    {/* Email */}
+                    <div>
+                        <label className="text-xs font-bold text-gray-700 uppercase tracking-wider block mb-1">Email Address</label>
+                        <div className="relative">
+                            <Mail className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                            <input
+                                type="email"
+                                required
+                                value={formData.email}
+                                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                                placeholder="name@company.com"
+                                className="w-full bg-[#F8FAFC] border border-[#DCE5EF] rounded-xl pl-10 pr-4 py-2.5 text-sm text-[#172B4D] placeholder:text-gray-400 focus:outline-none focus:border-[#0D6EFD] focus:bg-white transition-all font-medium"
+                            />
                         </div>
-                    )}
+                    </div>
+
+                    {/* Phone */}
+                    <div>
+                        <label className="text-xs font-bold text-gray-700 uppercase tracking-wider block mb-1">Phone Number</label>
+                        <div className="relative">
+                            <Phone className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                            <input
+                                type="tel"
+                                required
+                                value={formData.phone}
+                                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                                placeholder="e.g. 9876543210"
+                                className="w-full bg-[#F8FAFC] border border-[#DCE5EF] rounded-xl pl-10 pr-4 py-2.5 text-sm text-[#172B4D] placeholder:text-gray-400 focus:outline-none focus:border-[#0D6EFD] focus:bg-white transition-all font-medium"
+                            />
+                        </div>
+                    </div>
+
+                    {/* Password */}
+                    <div>
+                        <label className="text-xs font-bold text-gray-700 uppercase tracking-wider block mb-1">Password</label>
+                        <div className="relative">
+                            <Lock className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                            <input
+                                type={showPassword ? 'text' : 'password'}
+                                required
+                                value={formData.password}
+                                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                                placeholder="Minimum 6 characters"
+                                className="w-full bg-[#F8FAFC] border border-[#DCE5EF] rounded-xl pl-10 pr-10 py-2.5 text-sm text-[#172B4D] placeholder:text-gray-400 focus:outline-none focus:border-[#0D6EFD] focus:bg-white transition-all font-medium"
+                            />
+                            <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 cursor-pointer"
+                            >
+                                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Confirm Password */}
+                    <div>
+                        <label className="text-xs font-bold text-gray-700 uppercase tracking-wider block mb-1">Confirm Password</label>
+                        <div className="relative">
+                            <Lock className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                            <input
+                                type={showConfirmPassword ? 'text' : 'password'}
+                                required
+                                value={formData.confirmPassword}
+                                onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                                placeholder="Re-enter your password"
+                                className="w-full bg-[#F8FAFC] border border-[#DCE5EF] rounded-xl pl-10 pr-10 py-2.5 text-sm text-[#172B4D] placeholder:text-gray-400 focus:outline-none focus:border-[#0D6EFD] focus:bg-white transition-all font-medium"
+                            />
+                            <button
+                                type="button"
+                                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 cursor-pointer"
+                            >
+                                {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                            </button>
+                        </div>
+                    </div>
+
+                    <button
+                        type="submit"
+                        disabled={loading}
+                        className="w-full mt-4 bg-[#0D6EFD] hover:bg-blue-600 text-white font-bold py-3 rounded-xl shadow-xs transition-colors flex items-center justify-center gap-2 text-sm disabled:opacity-50 cursor-pointer"
+                    >
+                        {loading ? <ButtonLoader text="Creating Account..." /> : <>Register Account <ArrowRight className="w-4 h-4" /></>}
+                    </button>
+                </form>
+
+                {/* Login Link */}
+                <div className="mt-6 pt-5 border-t border-[#DCE5EF] text-center">
+                    <p className="text-xs text-gray-500 font-medium">
+                        Already have an account?{' '}
+                        <Link to={`/login?redirect=${redirect}`} className="text-[#0D6EFD] hover:underline font-bold">
+                            Sign In
+                        </Link>
+                    </p>
                 </div>
             </div>
         </div>
     );
-
 };
 
 export default Register;

@@ -1,4 +1,5 @@
 import Enquiry from '../models/Enquiry.js';
+import { sendEnquiryNotificationEmail } from '../utils/emailService.js';
 
 export const getEnquiries = async (req, res) => {
     try {
@@ -32,6 +33,12 @@ export const deleteEnquiry = async (req, res) => {
 export const createEnquiry = async (req, res) => {
     try {
         const enquiry = await Enquiry.create(req.body);
+        
+        // Trigger email notification asynchronously to sales team
+        sendEnquiryNotificationEmail(enquiry).catch(err => {
+            console.error('Email send background error:', err);
+        });
+
         res.status(201).json({ success: true, data: enquiry });
     } catch (error) {
         res.status(400).json({ message: error.message });

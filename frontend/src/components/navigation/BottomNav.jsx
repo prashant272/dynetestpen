@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { Home, Sparkles, Heart, ShoppingBag, User } from 'lucide-react';
+import { Home, Layers, Heart, ShoppingCart, User, FileText } from 'lucide-react';
 import { useCart } from '../../contexts/CartContext';
 import { useWishlist } from '../../contexts/WishlistContext';
 
@@ -9,7 +9,7 @@ const BottomNav = () => {
     const { wishlistItems } = useWishlist();
     const location = useLocation();
 
-    // Hide bottom nav on admin routes, reels, and final payment screen
+    // Hide bottom nav on admin routes, reels, and checkout payment screen
     if (
         location.pathname.startsWith('/admin') ||
         location.pathname.startsWith('/reels') ||
@@ -20,21 +20,22 @@ const BottomNav = () => {
 
     const token = localStorage.getItem('userToken');
 
+    const totalCartCount = Array.isArray(cartItems) 
+        ? cartItems.reduce((acc, item) => acc + (item.quantity || 1), 0)
+        : 0;
+
     const navItems = [
         { name: 'Home', icon: Home, path: '/' },
-        { name: 'Shop', icon: Sparkles, path: '/shop' },
-        { name: 'Wishlist', icon: Heart, path: '/wishlist', badge: wishlistItems?.length },
-        { name: 'Cart', icon: ShoppingBag, path: '/cart', badge: cartItems?.length },
+        { name: 'Products', icon: Layers, path: '/shop' },
+        { name: 'Saved', icon: Heart, path: '/wishlist', badge: wishlistItems?.length },
+        { name: 'Cart', icon: ShoppingCart, path: '/cart', badge: totalCartCount },
         { name: 'Account', icon: User, path: token ? '/profile' : '/login' }
     ];
 
     const handleTabClick = (path) => {
-        // Native micro-haptic feedback
         if (typeof window !== 'undefined' && 'vibrate' in navigator) {
             navigator.vibrate(8);
         }
-
-        // Tap-to-top behavior if user taps the active tab
         if (location.pathname === path) {
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
@@ -42,50 +43,45 @@ const BottomNav = () => {
 
     return (
         <nav
-            aria-label="Mobile Navigation"
-            className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/90 dark:bg-[#121212]/90 backdrop-blur-xl border-t border-gray-200/70 dark:border-gray-800 shadow-[0_-8px_30px_rgba(0,0,0,0.06)] select-none"
-            style={{ paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 8px)' }}
+            aria-label="Mobile Bottom Navigation"
+            className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-lg border-t border-[#DCE5EF] shadow-[0_-4px_20px_rgba(0,0,0,0.06)] select-none"
+            style={{ paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 6px)' }}
         >
-            <div className="flex justify-around items-center h-14 max-w-lg mx-auto px-2">
+            <div className="flex justify-around items-center h-14 max-w-md mx-auto px-2">
                 {navItems.map((item) => {
-                    const isActive =
-                        item.path === '/'
-                            ? location.pathname === '/'
-                            : location.pathname.startsWith(item.path);
-
+                    const Icon = item.icon;
                     return (
                         <NavLink
                             key={item.name}
                             to={item.path}
                             onClick={() => handleTabClick(item.path)}
-                            className={`group flex-1 flex flex-col items-center justify-center py-1 relative transition-all duration-200 active:scale-95 ${isActive ? 'text-[#cf7e28]' : 'text-gray-500 hover:text-[#cf7e28]'
-                                }`}
+                            className={({ isActive }) =>
+                                `relative flex flex-col items-center justify-center w-full h-full py-1 text-[11px] font-semibold transition-all duration-200 ${
+                                    isActive
+                                        ? 'text-[#0B3B6F] font-bold scale-105'
+                                        : 'text-gray-500 hover:text-gray-900'
+                                }`
+                            }
                         >
-                            {/* Icon Wrapper */}
-                            <div className="relative mb-0.5">
-                                <item.icon
-                                    size={21}
-                                    strokeWidth={isActive ? 2.3 : 1.8}
-                                    className={`transition-transform duration-200 ${isActive ? 'scale-110 -translate-y-0.5' : ''}`}
-                                />
-                                {item.badge > 0 && (
-                                    <span className="absolute -top-1.5 -right-2.5 min-w-[17px] h-[17px] px-1 bg-[#cf7e28] text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-white dark:border-[#121212] shadow-sm animate-in zoom-in-50">
-                                        {item.badge > 99 ? '99+' : item.badge}
-                                    </span>
-                                )}
-                            </div>
-
-                            {/* Label */}
-                            <span
-                                className={`text-[10px] tracking-tight transition-all duration-200 ${isActive ? 'font-bold text-[#cf7e28]' : 'font-medium text-gray-500 dark:text-gray-400'
-                                    }`}
-                            >
-                                {item.name}
-                            </span>
-
-                            {/* Active dot indicator */}
-                            {isActive && (
-                                <span className="absolute bottom-0.5 w-1 h-1 bg-[#cf7e28] rounded-full shadow-[0_0_6px_#cf7e28]" />
+                            {({ isActive }) => (
+                                <>
+                                    <div className="relative">
+                                        <Icon 
+                                            size={20} 
+                                            strokeWidth={isActive ? 2.5 : 2} 
+                                            className={isActive ? 'text-[#0B3B6F]' : 'text-gray-500'} 
+                                        />
+                                        {!!item.badge && item.badge > 0 && (
+                                            <span className="absolute -top-1.5 -right-2.5 min-w-[17px] h-[17px] px-1 bg-[#FFC107] text-[#0B3B6F] text-[10px] font-black rounded-full flex items-center justify-center border border-white shadow-xs">
+                                                {item.badge}
+                                            </span>
+                                        )}
+                                    </div>
+                                    <span className="mt-0.5 tracking-tight">{item.name}</span>
+                                    {isActive && (
+                                        <span className="absolute bottom-1 w-1 h-1 bg-[#0B3B6F] rounded-full" />
+                                    )}
+                                </>
                             )}
                         </NavLink>
                     );
@@ -95,4 +91,4 @@ const BottomNav = () => {
     );
 };
 
-export default BottomNav;
+export default React.memo(BottomNav);

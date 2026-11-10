@@ -344,7 +344,7 @@ const ReelsPage = () => {
 
     return (
         <div className="fixed inset-0 bg-[#0a0a0a] z-[100] h-[100dvh] w-full overflow-hidden flex flex-col">
-            <SEO title="Shop By Reels | Ownvibes" />
+            <SEO title="Product Demonstrations | ImageTech Industries" />
             
             {/* Top Close Button */}
             <div className="absolute top-6 right-6 z-[110]">

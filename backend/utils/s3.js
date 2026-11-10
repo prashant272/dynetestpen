@@ -6,18 +6,19 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 // Debug: Log if credentials are loaded (without exposing actual values)
-console.log('🔐 AWS Config Check:');
-console.log('  - Access Key ID:', process.env.AWS_ACCESS_KEY_ID ? '✓ Loaded' : '✗ Missing');
-console.log('  - Secret Key:', process.env.AWS_SECRET_ACCESS_KEY ? '✓ Loaded' : '✗ Missing');
-console.log('  - Region:', process.env.AWS_REGION || '✗ Missing');
-console.log('  - Bucket:', process.env.AWS_S3_BUCKET || '✗ Missing');
+console.log('🔐 Cloudflare R2 Config Check:');
+console.log('  - Account ID:', process.env.R2_ACCOUNT_ID ? '✓ Loaded' : '✗ Missing');
+console.log('  - Access Key ID:', process.env.R2_ACCESS_KEY_ID ? '✓ Loaded' : '✗ Missing');
+console.log('  - Secret Key:', process.env.R2_SECRET_ACCESS_KEY ? '✓ Loaded' : '✗ Missing');
+console.log('  - Bucket:', process.env.R2_BUCKET_NAME || '✗ Missing');
 
-// Configure S3 client
+// Configure S3 client for Cloudflare R2
 const s3Client = new S3Client({
-    region: process.env.AWS_REGION,
+    region: 'auto',
+    endpoint: `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
     credentials: {
-        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+        accessKeyId: process.env.R2_ACCESS_KEY_ID,
+        secretAccessKey: process.env.R2_SECRET_ACCESS_KEY
     }
 });
 
@@ -33,7 +34,7 @@ export async function uploadToS3(fileBuffer, fileName, mimeType) {
     const key = `career-commando/blog-images/${Date.now()}-${fileName}`;
 
     const command = new PutObjectCommand({
-        Bucket: process.env.AWS_S3_BUCKET,
+        Bucket: process.env.R2_BUCKET_NAME,
         Key: key,
         Body: fileBuffer,
         ContentType: mimeType,
@@ -62,7 +63,7 @@ export async function uploadToS3(fileBuffer, fileName, mimeType) {
  */
 export async function getPresignedUrl(key) {
     const command = new GetObjectCommand({
-        Bucket: process.env.AWS_S3_BUCKET,
+        Bucket: process.env.R2_BUCKET_NAME,
         Key: key
     });
 
@@ -81,7 +82,7 @@ export async function getPresignedUrl(key) {
  */
 export async function deleteFromS3(key) {
     const command = new DeleteObjectCommand({
-        Bucket: process.env.AWS_S3_BUCKET,
+        Bucket: process.env.R2_BUCKET_NAME,
         Key: key
     });
 

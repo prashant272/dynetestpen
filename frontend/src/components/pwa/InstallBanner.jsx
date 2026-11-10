@@ -114,9 +114,9 @@ const InstallBanner = () => {
                                 className="font-serif text-[19px] sm:text-[21px] font-black text-stone-900 tracking-tight leading-none"
                                 style={{ color: '#111827' }}
                             >
-                                Ownvibes
+                                ImageTech Industries
                             </h3>
-                            <ShieldCheck size={16} className="text-amber-600 fill-amber-100 shrink-0" />
+                            <ShieldCheck size={16} className="text-[#0B3B6F] fill-blue-100 shrink-0" />
                         </div>
 
                         {/* Store Specs Subtitle */}
