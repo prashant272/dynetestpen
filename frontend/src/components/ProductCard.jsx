@@ -7,7 +7,7 @@ import OptimizedImage from './OptimizedImage';
 import RequestQuoteModal from './common/RequestQuoteModal';
 
 const ProductCard = ({ product, isWishlistPage = false }) => {
-    const { name, price, description, images, category, dyneLevel, inStock = true, stock = 100 } = product;
+    const { name, title, price, description, images, category, dyneLevel, inStock = true, stock = 100 } = product;
     const { addToCart } = useCart();
     const { toggleWishlist, removeFromWishlist, isInWishlist } = useWishlist();
     const navigate = useNavigate();
@@ -17,7 +17,7 @@ const ProductCard = ({ product, isWishlistPage = false }) => {
 
     const categoryDisplay = typeof category === 'object' ? category?.name : category;
     const subcategoryDisplay = typeof product.subcategory === 'object' ? product.subcategory?.name : product.subcategory;
-    const productName = product.name || product.title || 'Industrial Product';
+    const productName = title || name || product.slug?.replace(/-/g, ' ').toUpperCase() || 'Dyne Test Solution';
 
     // Extract or compute Dyne Level if present in name
     const detectedDyne = dyneLevel || (() => {
@@ -140,8 +140,8 @@ const ProductCard = ({ product, isWishlistPage = false }) => {
                     </div>
 
                     {/* Product Name */}
-                    <h3 className="text-xs sm:text-sm md:text-base font-black text-[#172B4D] group-hover:text-[#0D6EFD] transition-colors line-clamp-2 leading-tight mb-1">
-                        {name}
+                    <h3 className="text-xs sm:text-sm md:text-base font-black text-[#172B4D] group-hover:text-[#0D6EFD] transition-colors line-clamp-2 leading-tight mb-1 min-h-[2rem]">
+                        {productName}
                     </h3>
 
                     {/* Description - Compact on mobile, fuller on desktop */}

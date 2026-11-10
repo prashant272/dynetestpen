@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom';
 import ProductCard from '../ProductCard';
 import ProductSkeleton from '../skeletons/ProductSkeleton';
 import { PRODUCTS_API_URL } from '../../api';
-import { DYNE_PENS, DYNE_INKS } from '../../data/industrialData';
+import { DYNE_PENS, DYNE_INKS, normalizeProduct } from '../../data/industrialData';
 
 const FeaturedProducts = () => {
   const penScrollRef = useRef(null);
@@ -18,7 +18,8 @@ const FeaturedProducts = () => {
         const response = await fetch(`${PRODUCTS_API_URL}/products`);
         if (!response.ok) return [];
         const json = await response.json();
-        return Array.isArray(json) ? json : (json.products || []);
+        const raw = Array.isArray(json) ? json : (json.products || []);
+        return raw.map(normalizeProduct);
       } catch {
         return [];
       }
@@ -136,7 +137,7 @@ const FeaturedProducts = () => {
               {dynePens.map((product, idx) => (
                 <div 
                   key={product._id || idx} 
-                  className="w-[190px] sm:w-[240px] md:w-[280px] shrink-0 snap-start"
+                  className="w-[220px] sm:w-[250px] md:w-[280px] shrink-0 snap-start"
                 >
                   <ProductCard product={product} />
                 </div>
@@ -214,7 +215,7 @@ const FeaturedProducts = () => {
               {dyneInks.map((product, idx) => (
                 <div 
                   key={product._id || idx} 
-                  className="w-[190px] sm:w-[240px] md:w-[280px] shrink-0 snap-start"
+                  className="w-[220px] sm:w-[250px] md:w-[280px] shrink-0 snap-start"
                 >
                   <ProductCard product={product} />
                 </div>
