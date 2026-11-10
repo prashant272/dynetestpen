@@ -48,7 +48,9 @@ const Footer = () => {
           
           {/* Col 1: Logo & Text */}
           <div className="lg:pr-6">
-            <img src="/logo.svg" alt="ImageTech Logo" className="h-14 mb-2 object-contain" />
+            <Link to="/">
+              <img src="/logo.jpg" alt="ImageTech Industries Logo" className="h-14 mb-2 object-contain" />
+            </Link>
             <p className="text-blue-600 font-bold text-[13px] mb-3">Your Satisfaction is our Priority</p>
             <p className="text-gray-800 font-medium text-[14px] leading-relaxed mb-4">
               We are a leading manufacturer and supplier of precision industrial products for printing, packaging, coating, and testing applications. Our commitment to quality, innovation, and customer satisfaction drives everything we do.

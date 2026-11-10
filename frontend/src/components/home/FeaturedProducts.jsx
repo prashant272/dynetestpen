@@ -84,7 +84,7 @@ const FeaturedProducts = () => {
                 <h2 className="text-lg sm:text-2xl md:text-3xl font-black text-[#0B3B6F] tracking-tight">
                   Dyne Test Pen
                 </h2>
-                <p className="text-[10px] sm:text-xs text-gray-500 font-medium hidden sm:block">
+                <p className="text-[11px] sm:text-xs text-gray-500 font-medium">
                   Precision MAGNET valve-action surface tension test pens (28 to 72 Dyne/cm)
                 </p>
               </div>
@@ -136,7 +136,7 @@ const FeaturedProducts = () => {
               {dynePens.map((product, idx) => (
                 <div 
                   key={product._id || idx} 
-                  className="w-[175px] sm:w-[240px] md:w-[280px] shrink-0 snap-start"
+                  className="w-[190px] sm:w-[240px] md:w-[280px] shrink-0 snap-start"
                 >
                   <ProductCard product={product} />
                 </div>
@@ -162,7 +162,7 @@ const FeaturedProducts = () => {
                 <h2 className="text-lg sm:text-2xl md:text-3xl font-black text-[#0B3B6F] tracking-tight">
                   Dyne Test Ink
                 </h2>
-                <p className="text-[10px] sm:text-xs text-gray-500 font-medium hidden sm:block">
+                <p className="text-[11px] sm:text-xs text-gray-500 font-medium">
                   ISO 8296 &amp; ASTM D2578 certified surface energy calibration inks (100ml / 250ml)
                 </p>
               </div>
@@ -214,7 +214,7 @@ const FeaturedProducts = () => {
               {dyneInks.map((product, idx) => (
                 <div 
                   key={product._id || idx} 
-                  className="w-[175px] sm:w-[240px] md:w-[280px] shrink-0 snap-start"
+                  className="w-[190px] sm:w-[240px] md:w-[280px] shrink-0 snap-start"
                 >
                   <ProductCard product={product} />
                 </div>

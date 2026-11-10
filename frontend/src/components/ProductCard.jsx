@@ -144,8 +144,8 @@ const ProductCard = ({ product, isWishlistPage = false }) => {
                         {name}
                     </h3>
 
-                    {/* Description - Desktop only for clean mobile 2-col look */}
-                    <p className="hidden sm:block text-xs text-gray-500 line-clamp-2 mb-3 leading-relaxed">
+                    {/* Description - Compact on mobile, fuller on desktop */}
+                    <p className="text-[11px] sm:text-xs text-gray-500 line-clamp-2 mb-2 sm:mb-3 leading-relaxed">
                         {description || "High-precision surface energy testing tool engineered for film converting, flexo printing and corona discharge validation."}
                     </p>
 

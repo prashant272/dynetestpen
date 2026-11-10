@@ -8,7 +8,7 @@ const Hero = () => {
 
   return (
     <>
-      <section className="relative w-full h-[220px] sm:h-[280px] md:h-[360px] lg:h-[420px] bg-black font-sans overflow-hidden">
+      <section className="relative w-full h-[320px] sm:h-[400px] md:h-[480px] lg:h-[560px] bg-black font-sans overflow-hidden">
         
         {/* Full-bleed Crystal Clear Video */}
         <video

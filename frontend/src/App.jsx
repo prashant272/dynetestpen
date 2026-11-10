@@ -1,4 +1,4 @@
-import React, { useEffect, useState, Suspense, lazy } from 'react'
+import React, { useEffect, Suspense, lazy } from 'react'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import { ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
@@ -10,14 +10,7 @@ import BottomNav from './components/navigation/BottomNav'
 import ScrollToTop from './components/ScrollToTop'
 import ProtectedRoute from './components/ProtectedRoute'
 import { API_BASE_URL } from './api'
-import { initPWA } from './pwa/registerSW'
-import OfflineBanner from './components/pwa/OfflineBanner'
-import UpdatePrompt from './components/pwa/UpdatePrompt'
 import PullToRefresh from './components/PullToRefresh'
-import InstallBanner from './components/pwa/InstallBanner'
-import SplashScreen from './components/pwa/SplashScreen'
-import { useAppBadge } from './hooks/useAppBadge'
-import { useCart } from './contexts/CartContext'
 
 // Lazy Load Pages to optimize initial load time
 const AboutUs = lazy(() => import('./pages/AboutUs'))
@@ -56,17 +49,15 @@ const PageLoader = () => (
 );
 
 function App() {
-  const [needRefresh, setNeedRefresh] = useState(false);
-  const { cartCount } = useCart();
-
-  // Sync native app badge with cart count
-  useAppBadge(cartCount);
-
   useEffect(() => {
-    // Initialize PWA Service Worker & lifecycle hooks
-    initPWA({
-      onNeedRefresh: () => setNeedRefresh(true),
-    });
+    // Unregister any existing service worker that might have been installed previously
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then((registrations) => {
+        for (let registration of registrations) {
+          registration.unregister();
+        }
+      });
+    }
 
     // Silent wake-up call (if endpoint exists)
     if (API_BASE_URL.includes('onrender.com')) {
@@ -79,11 +70,7 @@ function App() {
 
   return (
     <Router>
-      <SplashScreen />
       <ScrollToTop />
-      <OfflineBanner />
-      <InstallBanner />
-      <UpdatePrompt show={needRefresh} onDismiss={() => setNeedRefresh(false)} />
       <ToastContainer
         position="bottom-center"
         autoClose={3000}
