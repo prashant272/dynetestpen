@@ -88,22 +88,10 @@ app.use("/api/reviews", reviewRoutes);
 
 console.log('✅ Routes mounted: /api/auth, /api/products, /api/blogs, /api/orders, /api/payment, /api/upload, /api/admin, /api/enquiry, /api/coupons, /api/instagram, /api/reviews');
 
-// Serve static frontend files if built in public folder (Single-Container Production Mode)
-const publicPath = path.join(__dirname, "public");
-app.use(express.static(publicPath));
-
-// For SPA client routing (React Router fallback)
-app.get("/*", (req, res, next) => {
-    if (req.url.startsWith("/api")) {
-        return next();
-    }
-    const indexPath = path.join(publicPath, "index.html");
-    res.sendFile(indexPath, (err) => {
-        if (err) {
-            res.status(404).send("API Server Running. Frontend build not found.");
-        }
-    });
+// Health check route
+app.get("/", (req, res) => {
+    res.send("API Server Running.");
 });
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 5000;
 app.listen(PORT, '0.0.0.0', () => console.log(`Server running on port ${PORT}`));
