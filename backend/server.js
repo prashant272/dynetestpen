@@ -93,7 +93,7 @@ const publicPath = path.join(__dirname, "public");
 app.use(express.static(publicPath));
 
 // For SPA client routing (React Router fallback)
-app.get("*", (req, res, next) => {
+app.get("/*", (req, res, next) => {
     if (req.url.startsWith("/api")) {
         return next();
     }
