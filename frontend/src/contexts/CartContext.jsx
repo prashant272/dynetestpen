@@ -31,40 +31,52 @@ export const CartProvider = ({ children }) => {
 
     const addToCart = (product, qty = 1) => {
         setCartItems(prevItems => {
-            const uniqueId = product.selectedSize ? `${product._id}-${product.selectedSize}` : product._id;
+            const colorKey = product.selectedColor || 'Blue';
+            const sizeKey = product.selectedSize || 'Standard';
+            const uniqueId = `${product._id}-${sizeKey}-${colorKey}`;
+            
             const existItem = prevItems.find(x => {
-                const xId = x.selectedSize ? `${x._id}-${x.selectedSize}` : x._id;
-                return xId === uniqueId;
+                const xColor = x.selectedColor || 'Blue';
+                const xSize = x.selectedSize || 'Standard';
+                return `${x._id}-${xSize}-${xColor}` === uniqueId;
             });
             
-            toast.success(`${product.name} added to cart!`);
+            toast.success(`${product.name || product.title} (${colorKey}) added to cart!`);
             
             if (existItem) {
                 return prevItems.map(x => {
-                    const xId = x.selectedSize ? `${x._id}-${x.selectedSize}` : x._id;
-                    return xId === uniqueId ? { ...x, qty: x.qty + qty } : x;
+                    const xColor = x.selectedColor || 'Blue';
+                    const xSize = x.selectedSize || 'Standard';
+                    return `${x._id}-${xSize}-${xColor}` === uniqueId 
+                        ? { ...x, qty: x.qty + qty } 
+                        : x;
                 });
             } else {
-                return [...prevItems, { ...product, qty }];
+                return [...prevItems, { ...product, selectedColor: colorKey, selectedSize: sizeKey, qty }];
             }
         });
     };
 
-    const removeFromCart = (id, size = null) => {
-        const uniqueId = size ? `${id}-${size}` : id;
+    const removeFromCart = (id, size = null, color = null) => {
         setCartItems(prevItems => prevItems.filter(x => {
-            const xId = x.selectedSize ? `${x._id}-${x.selectedSize}` : x._id;
-            return xId !== uniqueId;
+            if (size || color) {
+                const matchId = x._id === id;
+                const matchSize = !size || (x.selectedSize === size);
+                const matchColor = !color || (x.selectedColor === color);
+                return !(matchId && matchSize && matchColor);
+            }
+            return x._id !== id;
         }));
         toast.info("Item removed from cart");
     };
 
-    const updateQty = (id, qty, size = null) => {
-        const uniqueId = size ? `${id}-${size}` : id;
+    const updateQty = (id, qty, size = null, color = null) => {
         setCartItems(prevItems =>
             prevItems.map(x => {
-                const xId = x.selectedSize ? `${x._id}-${x.selectedSize}` : x._id;
-                return xId === uniqueId ? { ...x, qty } : x;
+                const matchId = x._id === id;
+                const matchSize = !size || (x.selectedSize === size);
+                const matchColor = !color || (x.selectedColor === color);
+                return (matchId && matchSize && matchColor) ? { ...x, qty } : x;
             })
         );
     };

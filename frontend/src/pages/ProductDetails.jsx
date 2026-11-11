@@ -13,6 +13,7 @@ import { useCart } from '../contexts/CartContext';
 import { useWishlist } from '../contexts/WishlistContext';
 import SEO from '../components/SEO';
 import RequestQuoteModal from '../components/common/RequestQuoteModal';
+import ColorSelectionModal from '../components/common/ColorSelectionModal';
 import { IMAGETECH_FEATURED_PRODUCTS, ALL_DYNE_PRODUCTS, DYNE_PENS, DYNE_INKS } from '../data/industrialData';
 
 const ProductDetails = () => {
@@ -26,6 +27,8 @@ const ProductDetails = () => {
     const [activeTab, setActiveTab] = useState('OVERVIEW');
     const [isQuoteOpen, setIsQuoteOpen] = useState(false);
     const [isAdded, setIsAdded] = useState(false);
+    const [isColorModalOpen, setIsColorModalOpen] = useState(false);
+    const [pendingAction, setPendingAction] = useState('add'); // 'add' | 'buy'
 
     // Interactive Zoom State
     const [zoomPosition, setZoomPosition] = useState({ x: 50, y: 50 });
@@ -107,18 +110,41 @@ const ProductDetails = () => {
 
     const handleAddToCart = (e) => {
         e?.preventDefault();
-        addToCart({ ...product, selectedSize: 'Standard' }, quantity);
-        setIsAdded(true);
-        setTimeout(() => setIsAdded(false), 2000);
+        setPendingAction('add');
+        setIsColorModalOpen(true);
     };
 
     const handleBuyNow = () => {
-        addToCart({ ...product, selectedSize: 'Standard' }, quantity);
-        if (!localStorage.getItem('userToken')) {
-            navigate('/login?redirect=/checkout/address');
-            return;
+        setPendingAction('buy');
+        setIsColorModalOpen(true);
+    };
+
+    const handleColorConfirm = (chosenColor) => {
+        const rawName = product.name || product.title || 'Magnet Dyne Test Pen';
+        const cleanBaseName = rawName.replace(/\s*\((Blue|Pink)\s*Ink\)/gi, '').trim();
+        const titledWithName = `${cleanBaseName} (${chosenColor} Ink)`;
+
+        const productWithSpecs = {
+            ...product,
+            name: titledWithName,
+            title: titledWithName,
+            selectedSize: 'Standard',
+            selectedColor: chosenColor,
+            color: chosenColor
+        };
+
+        if (pendingAction === 'buy') {
+            addToCart(productWithSpecs, quantity);
+            if (!localStorage.getItem('userToken')) {
+                navigate('/login?redirect=/checkout/address');
+                return;
+            }
+            navigate('/checkout/address');
+        } else {
+            addToCart(productWithSpecs, quantity);
+            setIsAdded(true);
+            setTimeout(() => setIsAdded(false), 2000);
         }
-        navigate('/checkout/address');
     };
 
     // Dynamic Related Products:
@@ -870,6 +896,15 @@ const ProductDetails = () => {
                     </div>
                 </div>
             </div>
+
+            {/* Ink Color Selection Modal */}
+            <ColorSelectionModal
+                isOpen={isColorModalOpen}
+                onClose={() => setIsColorModalOpen(false)}
+                product={product}
+                actionType={pendingAction}
+                onConfirm={handleColorConfirm}
+            />
 
             {/* Video Modal Player */}
             {isVideoModalOpen && (

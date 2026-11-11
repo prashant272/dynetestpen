@@ -102,32 +102,58 @@ const CartPage = () => {
                                     <img src={item.images && item.images.length > 0 ? item.images[0] : 'https://via.placeholder.com/150'} alt={item.name} className="w-full h-full object-cover" loading="lazy" decoding="async" />
                                 </div>
                                 <div className="flex-1 text-center md:text-left">
-                                    <h3 className="text-xl font-bold text-[#1c1c1c] mb-1">{item.name}</h3>
-                                    <p className="text-gray-500 text-xs uppercase tracking-widest">{item.category}</p>
-                                    {item.selectedSize && (
-                                        <p className="text-[#cf7e28] text-xs font-bold mt-1">Size: {item.selectedSize}</p>
-                                    )}
+                                    <h3 className="text-lg font-bold text-[#172B4D] mb-1">
+                                        {item.name}
+                                        {item.selectedColor && !item.name?.toLowerCase().includes(item.selectedColor.toLowerCase()) && (
+                                            <span className="text-[#0D6EFD] ml-1.5 font-bold">
+                                                ({item.selectedColor} Ink)
+                                            </span>
+                                        )}
+                                    </h3>
+                                    <p className="text-gray-500 text-xs uppercase tracking-wider">{item.category}</p>
+                                    <div className="flex flex-wrap items-center gap-2 mt-1.5 justify-center md:justify-start">
+                                        {item.selectedColor ? (
+                                            <span className={`inline-flex items-center gap-1.5 text-xs font-black px-2.5 py-1 rounded-lg border shadow-2xs ${
+                                                item.selectedColor === 'Pink'
+                                                    ? 'bg-pink-50 text-pink-700 border-pink-300'
+                                                    : 'bg-blue-50 text-blue-700 border-blue-300'
+                                            }`}>
+                                                <span className={`w-2.5 h-2.5 rounded-full ${item.selectedColor === 'Pink' ? 'bg-pink-500' : 'bg-blue-600'}`} />
+                                                Selected : {item.selectedColor}
+                                            </span>
+                                        ) : (
+                                            <span className="inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 border border-blue-200">
+                                                <span className="w-2.5 h-2.5 rounded-full bg-blue-600" />
+                                                Selected : Blue
+                                            </span>
+                                        )}
+                                        {item.selectedSize && (
+                                            <span className="text-xs font-semibold text-gray-500 bg-gray-100 px-2.5 py-1 rounded-lg border border-gray-200">
+                                                Size: {item.selectedSize}
+                                            </span>
+                                        )}
+                                    </div>
                                 </div>
-                                <div className="flex items-center gap-4 bg-[#fbf5f2] p-2 rounded-xl border border-[#f5eadb]">
+                                <div className="flex items-center gap-4 bg-[#F8FAFC] p-2 rounded-xl border border-[#DCE5EF]">
                                     <button
-                                        onClick={() => updateQty(item._id, Math.max(1, item.qty - 1), item.selectedSize)}
-                                        className="p-1 text-[#c18641] hover:text-[#1c1c1c] transition-colors"
+                                        onClick={() => updateQty(item._id, Math.max(1, item.qty - 1), item.selectedSize, item.selectedColor)}
+                                        className="p-1 text-gray-600 hover:text-[#0B3B6F] transition-colors"
                                     >
                                         <Minus className="w-4 h-4" />
                                     </button>
-                                    <span className="text-[#1c1c1c] font-bold w-4 text-center">{item.qty}</span>
+                                    <span className="text-[#172B4D] font-bold w-4 text-center font-mono">{item.qty}</span>
                                     <button
-                                        onClick={() => updateQty(item._id, item.qty + 1, item.selectedSize)}
-                                        className="p-1 text-[#c18641] hover:text-[#1c1c1c] transition-colors"
+                                        onClick={() => updateQty(item._id, item.qty + 1, item.selectedSize, item.selectedColor)}
+                                        className="p-1 text-gray-600 hover:text-[#0B3B6F] transition-colors"
                                     >
                                         <Plus className="w-4 h-4" />
                                     </button>
                                 </div>
-                                <div className="text-xl font-black text-[#1c1c1c] md:w-24 text-right">
+                                <div className="text-xl font-black text-[#0B3B6F] md:w-24 text-right">
                                     ₹{item.price * item.qty}
                                 </div>
                                 <button
-                                    onClick={() => removeFromCart(item._id, item.selectedSize)}
+                                    onClick={() => removeFromCart(item._id, item.selectedSize, item.selectedColor)}
                                     className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-all border border-transparent hover:border-red-100"
                                 >
                                     <Trash2 className="w-5 h-5" />

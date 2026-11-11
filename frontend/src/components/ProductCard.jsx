@@ -5,6 +5,7 @@ import { useWishlist } from '../contexts/WishlistContext';
 import { useNavigate } from 'react-router-dom';
 import OptimizedImage from './OptimizedImage';
 import RequestQuoteModal from './common/RequestQuoteModal';
+import ColorSelectionModal from './common/ColorSelectionModal';
 
 const ProductCard = ({ product, isWishlistPage = false }) => {
     const { name, title, price, description, images, category, dyneLevel, inStock = true, stock = 100 } = product;
@@ -14,6 +15,8 @@ const ProductCard = ({ product, isWishlistPage = false }) => {
     const [isAdded, setIsAdded] = useState(false);
     const [quantity, setQuantity] = useState(1);
     const [isQuoteOpen, setIsQuoteOpen] = useState(false);
+    const [isColorModalOpen, setIsColorModalOpen] = useState(false);
+    const [pendingAction, setPendingAction] = useState('add'); // 'add' | 'buy'
 
     const categoryDisplay = typeof category === 'object' ? category?.name : category;
     const subcategoryDisplay = typeof product.subcategory === 'object' ? product.subcategory?.name : product.subcategory;
@@ -25,21 +28,45 @@ const ProductCard = ({ product, isWishlistPage = false }) => {
         return match ? `${match[1]} Dyne/cm` : null;
     })();
 
-    const handleAddToCart = (e) => {
+    const openColorModal = (e, action) => {
         e.stopPropagation();
-        addToCart({ ...product, selectedSize: 'Standard' }, quantity);
-        setIsAdded(true);
-        setTimeout(() => setIsAdded(false), 2000);
+        setPendingAction(action);
+        setIsColorModalOpen(true);
+    };
+
+    const handleColorConfirm = (chosenColor) => {
+        const cleanBaseName = productName.replace(/\s*\((Blue|Pink)\s*Ink\)/gi, '').trim();
+        const titledWithName = `${cleanBaseName} (${chosenColor} Ink)`;
+
+        const productWithSpecs = {
+            ...product,
+            name: titledWithName,
+            title: titledWithName,
+            selectedSize: 'Standard',
+            selectedColor: chosenColor,
+            color: chosenColor
+        };
+
+        if (pendingAction === 'buy') {
+            addToCart(productWithSpecs, quantity);
+            if (!localStorage.getItem('userToken')) {
+                navigate('/login?redirect=/checkout/address');
+                return;
+            }
+            navigate('/checkout/address');
+        } else {
+            addToCart(productWithSpecs, quantity);
+            setIsAdded(true);
+            setTimeout(() => setIsAdded(false), 2000);
+        }
+    };
+
+    const handleAddToCart = (e) => {
+        openColorModal(e, 'add');
     };
 
     const handleBuyNow = (e) => {
-        e.stopPropagation();
-        addToCart({ ...product, selectedSize: 'Standard' }, quantity);
-        if (!localStorage.getItem('userToken')) {
-            navigate('/login?redirect=/checkout/address');
-            return;
-        }
-        navigate('/checkout/address');
+        openColorModal(e, 'buy');
     };
 
     const handleCardClick = () => {
@@ -238,7 +265,15 @@ const ProductCard = ({ product, isWishlistPage = false }) => {
             <RequestQuoteModal
                 isOpen={isQuoteOpen}
                 onClose={() => setIsQuoteOpen(false)}
-                initialProduct={name}
+                initialProduct={productName}
+            />
+
+            <ColorSelectionModal
+                isOpen={isColorModalOpen}
+                onClose={() => setIsColorModalOpen(false)}
+                product={product}
+                actionType={pendingAction}
+                onConfirm={handleColorConfirm}
             />
         </>
     );
