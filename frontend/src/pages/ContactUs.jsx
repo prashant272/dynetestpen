@@ -88,63 +88,78 @@ Details: ${formData.message}`
                 <div className="grid md:grid-cols-12 gap-8 bg-white rounded-2xl p-6 sm:p-10 shadow-sm border border-[#DCE5EF]">
 
                     {/* Contact Info (5 cols) */}
-                    <div className="md:col-span-5 space-y-6">
+                    <div className="md:col-span-5 space-y-4">
                         <div>
-                            <h2 className="text-xl font-bold text-[#172B4D] mb-2">Technical Sales &amp; Plant Office</h2>
+                            <h2 className="text-xl font-bold text-[#172B4D] mb-1">Get in Touch</h2>
                             <p className="text-xs text-gray-500 leading-relaxed">
-                                Our commercial desks operate Monday through Saturday, 9:00 AM – 6:30 PM IST. We respond to all formal RFQs and inquiries within 24 hours.
+                                Reach out directly through any of our official channels below.
                             </p>
                         </div>
 
-                        <div className="space-y-4 pt-2">
-                            <div className="flex items-start gap-3 p-3.5 rounded-xl bg-[#F5F8FC] border border-[#DCE5EF]">
-                                <div className="w-10 h-10 bg-[#0B3B6F] text-white rounded-lg flex items-center justify-center shrink-0">
-                                    <Phone size={18} />
+                        <div className="space-y-3.5 pt-1">
+                            {/* 1. Office */}
+                            <div className="flex items-start gap-4 p-4 rounded-2xl bg-white border border-gray-200/90 shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
+                                <div className="w-11 h-11 rounded-xl bg-[#EFF6FF] text-[#2563EB] flex items-center justify-center shrink-0 border border-[#DBEAFE]">
+                                    <MapPin size={22} className="stroke-[2.2]" />
                                 </div>
-                                <div>
-                                    <h3 className="text-xs font-bold text-[#172B4D]">Commercial &amp; Orders Helpline</h3>
-                                    <p className="text-xs text-[#0D6EFD] font-semibold mt-0.5">
-                                        <a href="tel:+918448336036">+91-8448336036</a>
-                                    </p>
-                                    <p className="text-[11px] text-gray-400">Direct sales &amp; WhatsApp</p>
-                                </div>
-                            </div>
-
-                            <div className="flex items-start gap-3 p-3.5 rounded-xl bg-[#F5F8FC] border border-[#DCE5EF]">
-                                <div className="w-10 h-10 bg-[#0B3B6F] text-white rounded-lg flex items-center justify-center shrink-0">
-                                    <Mail size={18} />
-                                </div>
-                                <div>
-                                    <h3 className="text-xs font-bold text-[#172B4D]">Email Communications</h3>
-                                    <p className="text-xs text-[#0D6EFD] font-semibold mt-0.5">
-                                        <a href="mailto:sales@imagetechindustries.com">sales@imagetechindustries.com</a>
-                                    </p>
-                                    <p className="text-[11px] text-gray-400">Formal RFQs, POs, and Lab Queries</p>
-                                </div>
-                            </div>
-
-                            <div className="flex items-start gap-3 p-3.5 rounded-xl bg-[#F5F8FC] border border-[#DCE5EF]">
-                                <div className="w-10 h-10 bg-[#0B3B6F] text-white rounded-lg flex items-center justify-center shrink-0">
-                                    <MapPin size={18} />
-                                </div>
-                                <div>
-                                    <h3 className="text-xs font-bold text-[#172B4D]">Manufacturing Unit</h3>
-                                    <p className="text-xs text-gray-600 mt-0.5 leading-relaxed">
-                                        C-31, Nawada Housing Complex,<br />
-                                        New Delhi - 110059, India
+                                <div className="text-sm">
+                                    <h3 className="font-bold text-gray-900 text-[15px] mb-1">Office</h3>
+                                    <p className="font-semibold text-gray-800 text-[13px] leading-tight mb-0.5">ImageTech Industries</p>
+                                    <p className="text-gray-600 text-[12px] font-medium leading-relaxed uppercase">
+                                        RZ-I-13, 2ND FLOOR, NANDA BLOCK, MAHAVIR ENCLAVE, DELHI-110045, INDIA.
                                     </p>
                                 </div>
                             </div>
 
-                            <div className="flex items-start gap-3 p-3.5 rounded-xl bg-[#F5F8FC] border border-[#DCE5EF]">
-                                <div className="w-10 h-10 bg-[#0B3B6F] text-white rounded-lg flex items-center justify-center shrink-0">
-                                    <Clock size={18} />
+                            {/* 2. Email */}
+                            <div className="flex items-start gap-4 p-4 rounded-2xl bg-white border border-gray-200/90 shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
+                                <div className="w-11 h-11 rounded-xl bg-[#EFF6FF] text-[#2563EB] flex items-center justify-center shrink-0 border border-[#DBEAFE]">
+                                    <Mail size={22} className="stroke-[2.2]" />
                                 </div>
-                                <div>
-                                    <h3 className="text-xs font-bold text-[#172B4D]">Dispatch &amp; Lab Working Hours</h3>
-                                    <p className="text-xs text-gray-600 mt-0.5">
-                                        Monday – Saturday: 09:00 AM – 06:30 PM (IST)<br />
-                                        <span className="text-[11px] text-gray-400">Dispatch cutoff: 3:00 PM IST daily</span>
+                                <div className="text-sm">
+                                    <h3 className="font-bold text-gray-900 text-[15px] mb-1">Email</h3>
+                                    <div className="space-y-0.5">
+                                        <a 
+                                            href="mailto:imagetechindustries@gmail.com" 
+                                            className="block text-[13px] text-gray-700 hover:text-[#2563EB] font-medium transition-colors"
+                                        >
+                                            imagetechindustries@gmail.com
+                                        </a>
+                                        <a 
+                                            href="mailto:sales.imagetechindustries@gmail.com" 
+                                            className="block text-[13px] text-gray-700 hover:text-[#2563EB] font-medium transition-colors"
+                                        >
+                                            sales.imagetechindustries@gmail.com
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* 3. Phone */}
+                            <div className="flex items-start gap-4 p-4 rounded-2xl bg-white border border-gray-200/90 shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
+                                <div className="w-11 h-11 rounded-xl bg-[#EFF6FF] text-[#2563EB] flex items-center justify-center shrink-0 border border-[#DBEAFE]">
+                                    <Phone size={22} className="stroke-[2.2]" />
+                                </div>
+                                <div className="text-sm">
+                                    <h3 className="font-bold text-gray-900 text-[15px] mb-1">Phone</h3>
+                                    <div className="space-y-0.5 font-medium text-[13px] text-gray-700">
+                                        <a href="tel:+918448336036" className="block hover:text-[#2563EB] transition-colors">+91 8448336036</a>
+                                        <a href="tel:+918851016580" className="block hover:text-[#2563EB] transition-colors">+91 8851016580</a>
+                                        <a href="tel:+918448441345" className="block hover:text-[#2563EB] transition-colors">+91 8448441345</a>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* 4. Business Hours */}
+                            <div className="flex items-start gap-4 p-4 rounded-2xl bg-white border border-gray-200/90 shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
+                                <div className="w-11 h-11 rounded-xl bg-[#EFF6FF] text-[#2563EB] flex items-center justify-center shrink-0 border border-[#DBEAFE]">
+                                    <Clock size={22} className="stroke-[2.2]" />
+                                </div>
+                                <div className="text-sm">
+                                    <h3 className="font-bold text-gray-900 text-[15px] mb-1">Business Hours</h3>
+                                    <p className="text-[13px] text-gray-700 font-medium leading-relaxed">
+                                        Monday – Saturday<br />
+                                        9:00 AM – 6:00 PM (IST)
                                     </p>
                                 </div>
                             </div>

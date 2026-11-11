@@ -18,40 +18,32 @@ const AdminLogin = () => {
         setLoading(true);
 
         try {
-            // First attempt backend authentication
-            let loggedIn = false;
-            try {
-                const response = await axios.post(`${API_BASE_URL}/admin/login`, {
-                    password
-                });
-                if (response.data.success && response.data.token) {
-                    localStorage.setItem('adminToken', response.data.token);
-                    loggedIn = true;
-                }
-            } catch (apiErr) {
-                // If backend was rebooting or network issue, verify against master admin key directly
-                if (password === 'admin@2026') {
-                    // Create standalone valid token signature for immediate access
-                    const fallbackToken = `admin_session_${Date.now()}`;
-                    localStorage.setItem('adminToken', fallbackToken);
-                    loggedIn = true;
-                } else {
-                    throw apiErr;
-                }
-            }
+            // Strict Backend Authentication & Token Generation
+            const response = await axios.post(`${API_BASE_URL}/admin/login`, {
+                password
+            });
 
-            if (loggedIn) {
+            if (response.data.success && response.data.token) {
+                // Save genuine backend JWT token
+                localStorage.setItem('adminToken', response.data.token);
+                if (response.data.admin) {
+                    localStorage.setItem('adminInfo', JSON.stringify(response.data.admin));
+                }
                 navigate('/admin/dashboard');
+            } else {
+                setError(response.data.message || 'Login failed. Please check credentials.');
             }
         } catch (err) {
-            setError(err.response?.data?.message || 'Invalid admin password');
+            console.error('Admin login error:', err);
+            const msg = err.response?.data?.message || 'Server error. Please verify backend is running.';
+            setError(msg);
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        <div className="min-h-screen bg-[#F5F8FC] flex items-center justify-center p-4">
+        <div className="min-h-screen bg-[#F5F8FC] flex items-center justify-center p-4 font-sans">
             <SEO title="Admin Login | ImageTech Industries" />
             <div className="w-full max-w-md bg-white border border-[#DCE5EF] rounded-2xl shadow-xl p-8">
                 {/* Header */}
@@ -98,12 +90,13 @@ const AdminLogin = () => {
                         disabled={loading}
                         className="w-full py-3 bg-[#0D6EFD] hover:bg-blue-600 text-white font-bold rounded-xl text-sm shadow-sm transition-all disabled:opacity-50 cursor-pointer"
                     >
-                        {loading ? 'Authenticating...' : 'Sign In to Dashboard'}
+                        {loading ? 'Authenticating with Backend...' : 'Access Admin Dashboard'}
                     </button>
                 </form>
 
-                <div className="mt-6 pt-5 border-t border-[#DCE5EF] text-center text-xs text-gray-500 flex items-center justify-center gap-1.5">
-                    <ShieldCheck className="w-4 h-4 text-[#0D6EFD]" /> ImageTech Industries Authorized Personnel Only
+                <div className="mt-6 pt-5 border-t border-gray-100 flex items-center justify-center gap-1.5 text-xs text-gray-400">
+                    <ShieldCheck size={14} className="text-green-600" />
+                    <span>JWT-secured ImageTech Commercial API</span>
                 </div>
             </div>
         </div>

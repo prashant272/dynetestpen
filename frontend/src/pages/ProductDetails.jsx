@@ -377,34 +377,46 @@ const ProductDetails = () => {
                                 </div>
 
                                 {/* Action Buttons: Add to Cart, Request Bulk RFQ, Direct Procurement */}
-                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
+                                <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 mb-6">
                                     <button
                                         onClick={handleAddToCart}
-                                        className={`text-xs font-black py-3 px-4 rounded-xl transition-all flex items-center justify-center gap-2 shadow-xs active:scale-95 ${
+                                        className={`text-xs font-black py-3 px-3 rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-xs active:scale-95 ${
                                             isAdded 
-                                                ? 'bg-emerald-600 text-white' 
-                                                : 'bg-[#0B3B6F] hover:bg-[#082a50] text-white'
+                                                 ? 'bg-emerald-600 text-white' 
+                                                 : 'bg-[#0B3B6F] hover:bg-[#082a50] text-white'
                                         }`}
                                     >
-                                        <ShoppingCart size={16} />
-                                        <span>{isAdded ? 'Added to Cart' : 'Add to Cart'}</span>
+                                        <ShoppingCart size={15} />
+                                        <span>{isAdded ? 'Added' : 'Add to Cart'}</span>
                                     </button>
 
                                     <button
                                         onClick={() => setIsQuoteOpen(true)}
-                                        className="bg-[#FFC107] hover:bg-[#e0a800] text-[#0B3B6F] text-xs font-black py-3 px-4 rounded-xl transition-all flex items-center justify-center gap-2 shadow-xs active:scale-95"
+                                        className="bg-[#FFC107] hover:bg-[#e0a800] text-[#0B3B6F] text-xs font-black py-3 px-3 rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-xs active:scale-95"
                                     >
-                                        <FileText size={16} />
-                                        <span>Request Bulk RFQ</span>
+                                        <FileText size={15} />
+                                        <span>Request RFQ</span>
                                     </button>
 
                                     <button
                                         onClick={handleBuyNow}
-                                        className="bg-white hover:bg-gray-50 text-[#0B3B6F] border-2 border-[#0B3B6F] text-xs font-black py-3 px-4 rounded-xl transition-all flex items-center justify-center gap-2 shadow-xs active:scale-95"
+                                        className="bg-white hover:bg-gray-50 text-[#0B3B6F] border-2 border-[#0B3B6F] text-xs font-black py-3 px-3 rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-xs active:scale-95"
                                     >
-                                        <Zap size={16} className="text-[#0B3B6F]" />
-                                        <span>Direct Procurement</span>
+                                        <Zap size={15} className="text-[#0B3B6F]" />
+                                        <span>Buy Now</span>
                                     </button>
+
+                                    <a
+                                        href="/ImageTech_Dyne_Pen_Catalog.pdf"
+                                        download="ImageTech_Dyne_Pen_Catalog.pdf"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="bg-blue-50 hover:bg-blue-100 text-[#0B3B6F] border border-blue-200 text-xs font-bold py-3 px-3 rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-2xs active:scale-95"
+                                        title="Download Full Dyne Pen Catalog (PDF)"
+                                    >
+                                        <Download size={15} className="text-[#0D6EFD]" />
+                                        <span>Catalog PDF</span>
+                                    </a>
                                 </div>
 
                                 {/* Trust Indicators Strip */}
@@ -525,8 +537,8 @@ const ProductDetails = () => {
                         { id: 'OVERVIEW', label: 'Overview & Description', icon: FileText },
                         { id: 'SPECIFICATIONS', label: 'Specifications', icon: Layers },
                         { id: 'FEATURES', label: 'Key Features', icon: Target },
+                        { id: 'DOWNLOADS', label: 'Catalog & Datasheet', icon: Download },
                         { id: 'FAQS', label: 'FAQs', icon: HelpCircle },
-                        // { id: 'DOWNLOADS', label: 'Downloads', icon: Download }
                     ].map(tab => {
                         const Icon = tab.icon;
                         const isActive = activeTab === tab.id;
@@ -731,13 +743,19 @@ const ProductDetails = () => {
                                 <div className="flex items-center gap-3">
                                     <FileText size={20} className="text-[#0B3B6F]" />
                                     <div>
-                                        <p className="text-xs font-bold text-[#0B3B6F]">ASTM D2578 Test Procedure Datasheet</p>
-                                        <p className="text-[10px] text-gray-400">PDF Guide • 1.2 MB</p>
+                                        <p className="text-xs font-bold text-[#0B3B6F]">MAGNET Dyne Test Pen Official Catalog &amp; Lab Report</p>
+                                        <p className="text-[10px] text-gray-400">PDF Document • 2.2 MB • ASTM D2578 / IS : 6104</p>
                                     </div>
                                 </div>
-                                <button className="text-xs font-bold text-[#0D6EFD] hover:underline flex items-center gap-1">
-                                    Download <Download size={13} />
-                                </button>
+                                <a 
+                                    href="/ImageTech_Dyne_Pen_Catalog.pdf"
+                                    download="ImageTech_Dyne_Pen_Catalog.pdf"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-xs font-bold text-white bg-[#0B3B6F] hover:bg-[#082a50] px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-colors shadow-2xs"
+                                >
+                                    <span>Download</span> <Download size={13} />
+                                </a>
                             </div>
                         </div>
                     )}

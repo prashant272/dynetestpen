@@ -57,7 +57,7 @@ const ProductCard = ({ product, isWishlistPage = false }) => {
                 onClick={handleCardClick}
             >
                 {/* Header Badges & Wishlist Trigger */}
-                <div className="absolute top-2.5 left-2.5 z-10 hidden sm:flex flex-col gap-1 items-start">
+                <div className="absolute top-2.5 right-2.5 z-10 hidden sm:flex flex-col gap-1 items-end">
                     {detectedDyne && (
                         <span className="bg-[#0B3B6F] text-white text-[11px] font-mono font-bold px-2 py-0.5 rounded shadow-xs tracking-wide">
                             {detectedDyne}
@@ -74,7 +74,7 @@ const ProductCard = ({ product, isWishlistPage = false }) => {
                     )}
                 </div>
 
-                <div className="absolute top-2.5 right-2.5 z-10">
+                <div className="absolute top-2.5 left-2.5 z-10">
                     {isWishlistPage ? (
                         <button
                             onClick={(e) => {

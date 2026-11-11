@@ -159,6 +159,20 @@ const Navbar = () => {
                                 <Search size={20} />
                             </button>
 
+                            {/* Download Catalog PDF CTA */}
+                            <a
+                                href="/ImageTech_Dyne_Pen_Catalog.pdf"
+                                download="ImageTech_Dyne_Pen_Catalog.pdf"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1.5 bg-blue-50 hover:bg-blue-100 text-[#0B3B6F] text-xs font-bold px-2.5 sm:px-3 py-2 sm:py-2.5 rounded-lg border border-blue-200 shadow-2xs hover:shadow-xs transition-all active:scale-95"
+                                title="Download Full Dyne Test Pen Catalog (PDF)"
+                            >
+                                <FileText size={14} className="text-[#0D6EFD]" />
+                                <span className="hidden sm:inline">Catalog</span>
+                                <span className="text-[10px] text-blue-600 bg-white px-1 py-0.5 rounded border border-blue-200 font-mono">PDF</span>
+                            </a>
+
                             {/* Request a Quote CTA */}
                             <button
                                 onClick={() => setIsQuoteOpen(true)}
@@ -423,6 +437,19 @@ const Navbar = () => {
 
                             <li>
                                 <Link 
+                                    to="/how-to-use" 
+                                    className={`px-3.5 py-3 block hover:text-[#0B3B6F] transition-colors relative ${
+                                        location.pathname === '/how-to-use' 
+                                            ? 'text-[#0B3B6F] font-bold after:content-[""] after:absolute after:bottom-0 after:left-3.5 after:right-3.5 after:h-0.5 after:bg-[#0B3B6F]' 
+                                            : ''
+                                    }`}
+                                >
+                                    How To Use
+                                </Link>
+                            </li>
+
+                            <li>
+                                <Link 
                                     to="/about" 
                                     className={`px-3.5 py-3 block hover:text-[#0B3B6F] transition-colors relative ${
                                         location.pathname === '/about' 
@@ -626,6 +653,13 @@ const Navbar = () => {
                                 <div className="pt-3 pb-1 text-[11px] font-black text-[#0B3B6F] uppercase tracking-wider px-3">
                                     Company &amp; Resources
                                 </div>
+                                <Link 
+                                    to="/how-to-use" 
+                                    onClick={() => setIsMobileMenuOpen(false)}
+                                    className="block py-2.5 px-3 rounded-lg text-gray-800 hover:bg-blue-50 hover:text-[#0B3B6F]"
+                                >
+                                    How To Use (Dyne Guide)
+                                </Link>
                                 <Link 
                                     to="/about" 
                                     onClick={() => setIsMobileMenuOpen(false)}

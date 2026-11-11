@@ -1,5 +1,6 @@
 import React from 'react';
 import Hero from '../components/home/Hero';
+import ClientSlider from '../components/home/ClientSlider';
 import Categories from '../components/home/Categories';
 import FeaturedProducts from '../components/home/FeaturedProducts';
 import BulkOrderBanner from '../components/home/BulkOrderBanner';
@@ -50,6 +51,9 @@ const Home = () => {
 
       {/* 1. Hero Section */}
       <Hero />
+
+      {/* Client Logos Marquee Slider */}
+      <ClientSlider />
 
       {/* 2. Dyne Test Pen & Dyne Test Ink Showcase Sections */}
       <FeaturedProducts />

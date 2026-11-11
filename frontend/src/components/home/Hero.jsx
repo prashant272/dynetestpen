@@ -30,15 +30,15 @@ const Hero = () => {
           <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4">
             <Link
               to="/shop"
-              className="bg-[#0D6EFD] hover:bg-blue-600 text-white font-black text-xs sm:text-sm px-6 sm:px-8 py-3.5 sm:py-4 rounded-xl transition-all shadow-xl active:scale-95 inline-flex items-center gap-2 hover:-translate-y-0.5"
+              className="bg-[#0D6EFD] hover:bg-blue-600 text-white font-black text-xs sm:text-sm px-5 sm:px-7 py-3.5 sm:py-4 rounded-xl transition-all shadow-xl active:scale-95 inline-flex items-center gap-2 hover:-translate-y-0.5"
             >
-              <span>Explore Catalog</span>
+              <span>Explore Products</span>
               <ChevronRight size={17} />
             </Link>
             
             <button
               onClick={() => setIsQuoteOpen(true)}
-              className="bg-black/60 hover:bg-black/80 text-white border-2 border-white/40 hover:border-[#FFC107] font-black text-xs sm:text-sm px-6 sm:px-8 py-3.5 sm:py-4 rounded-xl transition-all backdrop-blur-md active:scale-95 inline-flex items-center gap-2 cursor-pointer shadow-xl hover:-translate-y-0.5"
+              className="bg-black/60 hover:bg-black/80 text-white border-2 border-white/40 hover:border-[#FFC107] font-black text-xs sm:text-sm px-5 sm:px-7 py-3.5 sm:py-4 rounded-xl transition-all backdrop-blur-md active:scale-95 inline-flex items-center gap-2 cursor-pointer shadow-xl hover:-translate-y-0.5"
             >
               <FileText size={16} className="text-[#FFC107]" />
               <span>Request Custom Dyne RFQ</span>

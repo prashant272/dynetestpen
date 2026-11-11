@@ -12,6 +12,8 @@ const Footer = () => {
     { label: 'Our Products', url: '/shop' },
     { label: 'Blogs', url: '/blog' },
     { label: 'FAQs', url: '/faqs' },
+    { label: 'How To Use (Dyne Guide)', url: '/how-to-use' },
+    { label: 'Download Catalog (PDF)', url: '/ImageTech_Dyne_Pen_Catalog.pdf', isDownload: true },
     { label: 'Contact Us', url: '/contact-us' },
   ];
 
@@ -86,10 +88,23 @@ const Footer = () => {
             <ul className="space-y-2">
               {quickLinks.map((link, index) => (
                 <li key={index}>
-                  <Link to={link.url} className="text-black font-bold text-[14px] hover:text-blue-600 transition-colors flex items-center gap-2 group">
-                    <ChevronRight className="w-4 h-4 text-blue-600" />
-                    {link.label}
-                  </Link>
+                  {link.isDownload ? (
+                    <a 
+                      href={link.url}
+                      download="ImageTech_Dyne_Pen_Catalog.pdf"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-black font-bold text-[14px] hover:text-blue-600 transition-colors flex items-center gap-2 group"
+                    >
+                      <ChevronRight className="w-4 h-4 text-blue-600" />
+                      <span>{link.label}</span>
+                    </a>
+                  ) : (
+                    <Link to={link.url} className="text-black font-bold text-[14px] hover:text-blue-600 transition-colors flex items-center gap-2 group">
+                      <ChevronRight className="w-4 h-4 text-blue-600" />
+                      {link.label}
+                    </Link>
+                  )}
                 </li>
               ))}
             </ul>

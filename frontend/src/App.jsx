@@ -13,6 +13,7 @@ import { API_BASE_URL } from './api'
 import PullToRefresh from './components/PullToRefresh'
 
 // Lazy Load Pages to optimize initial load time
+const HowToUse = lazy(() => import('./pages/HowToUse'))
 const AboutUs = lazy(() => import('./pages/AboutUs'))
 const ContactUs = lazy(() => import('./pages/ContactUs'))
 const FAQs = lazy(() => import('./pages/FAQs'))
@@ -125,6 +126,7 @@ function App() {
                       <Route path="/checkout/payment" element={<PaymentPage />} />
                       <Route path="/checkout/success" element={<SuccessPage />} />
                       <Route path="/my-orders" element={<MyOrders />} />
+                      <Route path="/how-to-use" element={<HowToUse />} />
                       <Route path="/about" element={<AboutUs />} />
                       <Route path="/about-us" element={<AboutUs />} />
                       <Route path="/contact" element={<ContactUs />} />

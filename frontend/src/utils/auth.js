@@ -1,21 +1,16 @@
 import axios from 'axios';
 import { API_BASE_URL } from '../api';
-import { clearUserCache } from '../pwa/registerSW';
-import { clearAllOfflineData } from '../offline/db';
 
 /**
  * Check if user is authenticated as admin
  * @returns {boolean}
  */
 export const isAdminAuthenticated = () => {
-    if (localStorage.getItem('adminToken')) return true;
-    const token = localStorage.getItem('userToken');
-    const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
-    return !!token && userInfo.role === 'admin';
+    return !!localStorage.getItem('adminToken');
 };
 
 /**
- * Get admin token from localStorage (preferring userToken)
+ * Get admin token from localStorage
  * @returns {string|null}
  */
 export const getAdminToken = () => {
@@ -33,18 +28,14 @@ export const verifyAdminToken = async () => {
         return false;
     }
 
-    // Direct local token validity check
-    if (token.startsWith('admin_session_')) {
-        return true;
-    }
-
     try {
         const response = await axios.post(`${API_BASE_URL}/admin/verify`, {
             token
         });
-        return response.data.valid;
+        return !!response.data.valid;
     } catch (error) {
-        return !!token;
+        console.warn('Backend admin token verification failed:', error?.response?.data || error.message);
+        return false;
     }
 };
 
@@ -53,10 +44,7 @@ export const verifyAdminToken = async () => {
  */
 export const logoutAdmin = () => {
     localStorage.removeItem('adminToken');
-    localStorage.removeItem('userToken');
-    localStorage.removeItem('userInfo');
-    clearUserCache();
-    clearAllOfflineData();
+    localStorage.removeItem('adminInfo');
 };
 
 /**
@@ -65,6 +53,4 @@ export const logoutAdmin = () => {
 export const logoutUser = () => {
     localStorage.removeItem('userToken');
     localStorage.removeItem('userInfo');
-    clearUserCache();
-    clearAllOfflineData();
 };
