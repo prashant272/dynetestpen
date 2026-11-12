@@ -83,7 +83,8 @@ const ProductDetails = () => {
         const desc = rawProduct.shortDesc || (typeof rawProduct.longDesc === 'string' ? rawProduct.longDesc.replace(/<[^>]*>?/gm, '').slice(0, 220) : rawProduct.description);
 
         const dyneMatch = title.match(/(\d{2})\s*Dyne/i);
-        const dyneLevel = dyneMatch ? `${dyneMatch[1]} Dyne/CM` : "48 Dyne/CM";
+        const dyneNumber = dyneMatch ? dyneMatch[1] : (rawProduct.dyneLevel ? String(rawProduct.dyneLevel).match(/(\d{2})/)?.[1] || "38" : "38");
+        const dyneLevel = `${dyneNumber} Dyne/cm`;
 
         return {
             ...rawProduct,
@@ -92,6 +93,7 @@ const ProductDetails = () => {
             category: categoryName,
             subcategory: subcategoryName,
             description: desc,
+            dyneNumber: dyneNumber,
             dyneLevel: dyneLevel,
             price: typeof rawProduct.price === 'number' ? rawProduct.price : 0
         };
@@ -516,7 +518,9 @@ const ProductDetails = () => {
                             </div>
                             <div className="min-w-0">
                                 <span className="block text-[10px] font-bold text-gray-400 uppercase">Dyne Value</span>
-                                <span className="text-xs font-bold text-[#0B3B6F] truncate block">48 Dyne</span>
+                                <span className="text-xs font-bold text-[#0B3B6F] truncate block">
+                                    {product.dyneLevel || `${product.dyneNumber || '38'} Dyne`}
+                                </span>
                             </div>
                         </div>
 
@@ -699,7 +703,7 @@ const ProductDetails = () => {
                                     <tbody className="divide-y divide-[#DCE5EF]">
                                         <tr className="bg-[#F8FAFC]">
                                             <td className="px-4 py-3 font-bold text-gray-700 w-1/3">Product Name</td>
-                                            <td className="px-4 py-3 font-bold text-[#0B3B6F]">Dyne Test Pen - 48 Dyne</td>
+                                            <td className="px-4 py-3 font-bold text-[#0B3B6F]">{product.name}</td>
                                         </tr>
                                         <tr>
                                             <td className="px-4 py-3 font-bold text-gray-700">Brand</td>
@@ -707,7 +711,7 @@ const ProductDetails = () => {
                                         </tr>
                                         <tr className="bg-[#F8FAFC]">
                                             <td className="px-4 py-3 font-bold text-gray-700">Dyne Value</td>
-                                            <td className="px-4 py-3 font-bold text-[#0B3B6F]">48 Dyne/cm</td>
+                                            <td className="px-4 py-3 font-bold text-[#0B3B6F]">{product.dyneLevel}</td>
                                         </tr>
                                         <tr>
                                             <td className="px-4 py-3 font-bold text-gray-700">Available Colours</td>
