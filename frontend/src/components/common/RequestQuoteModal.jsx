@@ -11,16 +11,24 @@ const RequestQuoteModal = ({ isOpen, onClose, initialProduct = '' }) => {
     company: '',
     product: initialProduct,
     quantity: '100 - 500 units',
-    dyneRange: '32 - 44 Dyne/cm',
     message: ''
   });
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [phoneError, setPhoneError] = useState('');
 
   if (!isOpen) return null;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Validate phone number: only digits/plus, min 10 digits
+    const digitsOnly = formData.phone.replace(/\D/g, '');
+    if (digitsOnly.length < 10) {
+      toast.error("Please enter a valid 10-digit phone number");
+      return;
+    }
+
     setSubmitting(true);
 
     try {
@@ -29,11 +37,10 @@ const RequestQuoteModal = ({ isOpen, onClose, initialProduct = '' }) => {
         name: formData.name,
         company: formData.company || 'Not Specified',
         email: formData.email,
-        phone: formData.phone || '',
-        subject: `[B2B RFQ Lead] ${formData.product || 'Dyne Test Pens/Inks'}`,
+        phone: formData.phone.trim(),
+        subject: `[B2B RFQ Lead] ${formData.product || 'Industrial Inquiry'}`,
         message: `Product Interest: ${formData.product || 'General Inquiry'}
 Estimated Quantity: ${formData.quantity}
-Target Dyne Range: ${formData.dyneRange}
 Requirements / Notes: ${formData.message || 'None'}`
       };
 
@@ -45,18 +52,17 @@ Requirements / Notes: ${formData.message || 'None'}`
         body: JSON.stringify(payload)
       });
 
-      if (res.ok) {
+      const data = await res.json().catch(() => ({}));
+
+      if (res.ok && data.success) {
         setSubmitted(true);
         toast.success("Quote request submitted! Our technical sales engineers will contact you within 24 hours.");
       } else {
-        // Fallback simulate success for client presentation if backend is unseeded
-        setSubmitted(true);
-        toast.success("Quote request submitted successfully!");
+        toast.error(data.message || "Failed to submit quote request. Please check required fields.");
       }
     } catch (err) {
-      console.warn("Enquiry post fallback:", err);
-      setSubmitted(true);
-      toast.success("Quote request recorded. We will contact you shortly.");
+      console.error("Enquiry post error:", err);
+      toast.error("Network error. Please try again.");
     } finally {
       setSubmitting(false);
     }
@@ -64,6 +70,7 @@ Requirements / Notes: ${formData.message || 'None'}`
 
   const resetAndClose = () => {
     setSubmitted(false);
+    setPhoneError('');
     setFormData({
       name: '',
       email: '',
@@ -71,7 +78,6 @@ Requirements / Notes: ${formData.message || 'None'}`
       company: '',
       product: '',
       quantity: '100 - 500 units',
-      dyneRange: '32 - 44 Dyne/cm',
       message: ''
     });
     onClose();
@@ -162,12 +168,31 @@ Requirements / Notes: ${formData.message || 'None'}`
                   <input
                     type="tel"
                     required
+                    maxLength={15}
                     value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                    onChange={(e) => {
+                      const rawVal = e.target.value;
+                      if (/[^0-9+\s\-()]/.test(rawVal)) {
+                        setPhoneError('Only numbers allowed');
+                      } else {
+                        setPhoneError('');
+                      }
+                      const filtered = rawVal.replace(/[^0-9+\s\-()]/g, '');
+                      setFormData({ ...formData, phone: filtered });
+                    }}
                     placeholder="+91 98765 43210"
-                    className="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0D6EFD] focus:border-[#0D6EFD] outline-none"
+                    className={`w-full pl-9 pr-3 py-2 text-sm border rounded-lg focus:ring-2 outline-none ${
+                      phoneError 
+                        ? 'border-red-500 focus:ring-red-200 focus:border-red-500' 
+                        : 'border-gray-300 focus:ring-[#0D6EFD] focus:border-[#0D6EFD]'
+                    }`}
                   />
                 </div>
+                {phoneError && (
+                  <p className="text-[11px] text-red-600 font-semibold mt-1">
+                    {phoneError}
+                  </p>
+                )}
               </div>
 
               <div>

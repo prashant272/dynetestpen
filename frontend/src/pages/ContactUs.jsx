@@ -16,29 +16,41 @@ const ContactUs = () => {
     });
     const [submitting, setSubmitting] = useState(false);
     const [submitted, setSubmitted] = useState(false);
+    const [phoneError, setPhoneError] = useState('');
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        // Phone number validation: min 10 digits
+        const digitsOnly = formData.phone.replace(/\D/g, '');
+        if (digitsOnly.length < 10) {
+            toast.error("Please enter a valid 10-digit phone number");
+            return;
+        }
+
         setSubmitting(true);
         try {
             const payload = {
                 name: formData.name,
+                company: formData.company || 'Not Specified',
                 email: formData.email,
-                message: `[INDUSTRIAL INQUIRY: ${formData.subject}]
-Company: ${formData.company || 'Not specified'}
-Phone: ${formData.phone || 'Not specified'}
-Details: ${formData.message}`
+                phone: formData.phone || '',
+                subject: formData.subject || 'General Technical Inquiry',
+                message: formData.message
             };
 
-            await axios.post(`${API_BASE_URL}/enquiries`, payload);
-            setSubmitted(true);
-            toast.success('Your message has been dispatched to ImageTech Technical Sales.');
-            setFormData({ name: '', email: '', phone: '', company: '', subject: 'General Technical Inquiry', message: '' });
+            const response = await axios.post(`${API_BASE_URL}/enquiry/submit`, payload);
+            if (response.data.success) {
+                setSubmitted(true);
+                toast.success('Your message has been dispatched to ImageTech Technical Sales.');
+                setFormData({ name: '', email: '', phone: '', company: '', subject: 'General Technical Inquiry', message: '' });
+            } else {
+                toast.error(response.data.message || 'Failed to submit enquiry');
+            }
         } catch (error) {
             console.error('Error submitting form:', error);
-            // Fallback user feedback
-            setSubmitted(true);
-            toast.success('Thank you! Our technical sales engineers will contact you shortly.');
+            const errMessage = error.response?.data?.message || 'Server error. Please verify your details and try again.';
+            toast.error(errMessage);
         } finally {
             setSubmitting(false);
         }
@@ -216,14 +228,34 @@ Details: ${formData.message}`
 
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div>
-                                        <label className="block text-xs font-bold text-[#172B4D] mb-1">Phone / WhatsApp</label>
+                                        <label className="block text-xs font-bold text-[#172B4D] mb-1">Phone / WhatsApp *</label>
                                         <input
                                             type="tel"
+                                            required
+                                            maxLength={15}
                                             value={formData.phone}
-                                            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                                            onChange={(e) => {
+                                                const rawVal = e.target.value;
+                                                if (/[^0-9+\s\-()]/.test(rawVal)) {
+                                                    setPhoneError('Only numbers allowed');
+                                                } else {
+                                                    setPhoneError('');
+                                                }
+                                                const filtered = rawVal.replace(/[^0-9+\s\-()]/g, '');
+                                                setFormData({ ...formData, phone: filtered });
+                                            }}
                                             placeholder="+91 98765 43210"
-                                            className="w-full px-3 py-2 text-xs bg-white border border-[#DCE5EF] rounded-lg outline-none focus:border-[#0D6EFD]"
+                                            className={`w-full px-3 py-2 text-xs bg-white border rounded-lg outline-none ${
+                                                phoneError 
+                                                    ? 'border-red-500 focus:border-red-500' 
+                                                    : 'border-[#DCE5EF] focus:border-[#0D6EFD]'
+                                            }`}
                                         />
+                                        {phoneError && (
+                                            <p className="text-[11px] text-red-600 font-semibold mt-1">
+                                                {phoneError}
+                                            </p>
+                                        )}
                                     </div>
                                     <div>
                                         <label className="block text-xs font-bold text-[#172B4D] mb-1">Company / Plant</label>

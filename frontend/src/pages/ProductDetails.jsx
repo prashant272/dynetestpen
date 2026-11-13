@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useQuery } from '@tanstack/react-query';
-import { 
-    ChevronRight, ChevronLeft, ShoppingCart, Zap, FileText, 
+import {
+    ChevronRight, ChevronLeft, ShoppingCart, Zap, FileText,
     Maximize2, Award, ShieldCheck, CheckCircle2, Check,
     Clock, Truck, FileCheck, Layers, Droplets, Target,
     Download, HelpCircle, ArrowRight, Play, Volume2, VolumeX, X
@@ -157,7 +157,7 @@ const ProductDetails = () => {
 
         const titleLower = (product.title || '').toLowerCase();
         const isCurrentPen = titleLower.includes('pen') && !titleLower.includes('ink');
-        
+
         // Extract current product Dyne number (e.g. 48)
         const currentMatch = (product.title || '').match(/(\d{2})\s*Dyne/i);
         const currentDyneNum = currentMatch ? parseInt(currentMatch[1], 10) : 38;
@@ -186,7 +186,7 @@ const ProductDetails = () => {
             const dyneVal = match ? parseInt(match[1], 10) : 0;
             const img = Array.isArray(p.images) && p.images.length > 0
                 ? p.images[0]
-                : (isCurrentPen 
+                : (isCurrentPen
                     ? 'https://pub-2343d84e533742e08719e1d3d8c0a3d6.r2.dev/products/72351621b7d9014281b6ef81aa567f7a.webp'
                     : 'https://pub-2343d84e533742e08719e1d3d8c0a3d6.r2.dev/products/a9b2386377ae5a2a8ddfb3070f83f195.webp'
                 );
@@ -226,7 +226,7 @@ const ProductDetails = () => {
             />
 
             <div className="max-w-[1400px] mx-auto px-4 md:px-8">
-                
+
                 {/* 1. Breadcrumbs */}
                 <nav className="flex items-center gap-2 text-xs font-medium text-gray-500 mb-6">
                     <Link to="/" className="hover:text-[#0D6EFD] flex items-center gap-1">
@@ -241,22 +241,21 @@ const ProductDetails = () => {
                 {/* 2. Top Product Card (Split View) */}
                 <div className="bg-white rounded-2xl border border-[#DCE5EF] p-6 lg:p-8 shadow-xs">
                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10">
-                        
+
                         {/* Left: Product Imagery with Side Thumbnails (5 cols) */}
                         <div className="lg:col-span-5 space-y-4">
-                            
+
                             {/* Vertical Thumbnail Strip on Left + Main Stage on Right */}
                             <div className="flex flex-col-reverse sm:flex-row gap-3 items-start">
-                                
+
                                 {/* Vertical Thumbnails & Watch Video Button */}
                                 <div className="flex sm:flex-col gap-2.5 overflow-x-auto sm:overflow-y-auto max-h-[360px] hide-scrollbar shrink-0 w-full sm:w-[72px]">
                                     {images.slice(0, 4).map((img, idx) => (
                                         <button
                                             key={idx}
                                             onClick={() => setSelectedImage(idx)}
-                                            className={`w-16 h-16 sm:w-full sm:h-[72px] rounded-xl overflow-hidden bg-[#F5F8FC] border-2 transition-all p-1 flex items-center justify-center shrink-0 ${
-                                                selectedImage === idx ? 'border-[#0D6EFD] ring-2 ring-blue-100 shadow-xs' : 'border-[#DCE5EF] hover:border-gray-300'
-                                            }`}
+                                            className={`w-16 h-16 sm:w-full sm:h-[72px] rounded-xl overflow-hidden bg-[#F5F8FC] border-2 transition-all p-1 flex items-center justify-center shrink-0 ${selectedImage === idx ? 'border-[#0D6EFD] ring-2 ring-blue-100 shadow-xs' : 'border-[#DCE5EF] hover:border-gray-300'
+                                                }`}
                                         >
                                             <img src={img} alt="thumb" className="w-full h-full object-contain mix-blend-multiply" />
                                         </button>
@@ -276,7 +275,7 @@ const ProductDetails = () => {
                                 </div>
 
                                 {/* Main Stage with Interactive Cursor Zoom */}
-                                <div 
+                                <div
                                     className="relative flex-1 w-full aspect-[4/3] rounded-2xl overflow-hidden bg-gradient-to-b from-[#EBF2FA] to-[#F1F6FC] border-2 border-[#DCE5EF] hover:border-[#0D6EFD] flex items-center justify-center p-6 group cursor-crosshair transition-colors duration-200"
                                     onMouseMove={handleMouseMove}
                                     onMouseEnter={() => setIsHovered(true)}
@@ -291,16 +290,15 @@ const ProductDetails = () => {
                                         }}
                                         className="w-full h-full object-contain mix-blend-multiply transition-transform duration-150 ease-out pointer-events-none"
                                     />
-                                    
+
                                     {/* Dyne/CM Pill Badge */}
                                     <span className="absolute top-4 left-4 bg-[#0B3B6F] text-white text-xs font-mono font-black px-3 py-1 rounded-md shadow-xs pointer-events-none z-10">
                                         {product.dyneLevel}
                                     </span>
 
                                     {/* Zoom Hint Badge */}
-                                    <span className={`absolute bottom-4 right-4 bg-white/90 backdrop-blur-xs text-[#0B3B6F] text-[10px] font-bold px-2 py-0.5 rounded shadow-2xs border border-gray-200 pointer-events-none transition-opacity duration-200 ${
-                                        isHovered ? 'opacity-0' : 'opacity-100'
-                                    }`}>
+                                    <span className={`absolute bottom-4 right-4 bg-white/90 backdrop-blur-xs text-[#0B3B6F] text-[10px] font-bold px-2 py-0.5 rounded shadow-2xs border border-gray-200 pointer-events-none transition-opacity duration-200 ${isHovered ? 'opacity-0' : 'opacity-100'
+                                        }`}>
                                         Hover to Zoom
                                     </span>
 
@@ -408,11 +406,10 @@ const ProductDetails = () => {
                                 <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 mb-6">
                                     <button
                                         onClick={handleAddToCart}
-                                        className={`text-xs font-black py-3 px-3 rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-xs active:scale-95 ${
-                                            isAdded 
-                                                 ? 'bg-emerald-600 text-white' 
-                                                 : 'bg-[#0B3B6F] hover:bg-[#082a50] text-white'
-                                        }`}
+                                        className={`text-xs font-black py-3 px-3 rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-xs active:scale-95 ${isAdded
+                                                ? 'bg-emerald-600 text-white'
+                                                : 'bg-[#0B3B6F] hover:bg-[#082a50] text-white'
+                                            }`}
                                     >
                                         <ShoppingCart size={15} />
                                         <span>{isAdded ? 'Added' : 'Add to Cart'}</span>
@@ -488,7 +485,7 @@ const ProductDetails = () => {
                 {/* 3. Parameter Badges Strip (Product Name, Brand, Dyne Value, Colours, Application, Industry) */}
                 <div className="mt-6 bg-white rounded-2xl border border-[#DCE5EF] p-4 shadow-xs">
                     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-                        
+
                         {/* 1. Product Name */}
                         <div className="flex items-center gap-2.5">
                             <div className="w-8 h-8 rounded-lg bg-blue-50 border border-blue-100 flex items-center justify-center text-[#0B3B6F] shrink-0">
@@ -576,11 +573,10 @@ const ProductDetails = () => {
                             <button
                                 key={tab.id}
                                 onClick={() => setActiveTab(tab.id)}
-                                className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold transition-all shrink-0 ${
-                                    isActive
+                                className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold transition-all shrink-0 ${isActive
                                         ? 'bg-[#0B3B6F] text-white shadow-xs'
                                         : 'bg-white text-gray-600 hover:text-[#0B3B6F] border border-[#DCE5EF]'
-                                }`}
+                                    }`}
                             >
                                 <Icon size={14} />
                                 <span>{tab.label}</span>
@@ -591,11 +587,11 @@ const ProductDetails = () => {
 
                 {/* 5. Tab Content: Side-by-side Overview & Why Choose Layout */}
                 <div className="mt-6 bg-white rounded-2xl border border-[#DCE5EF] p-6 lg:p-8 shadow-xs">
-                    
+
                     {/* OVERVIEW TAB */}
                     {activeTab === 'OVERVIEW' && (
                         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-                            
+
                             {/* Left: Product Overview + Ideal For (6 cols) */}
                             <div className="lg:col-span-5 space-y-6">
                                 <div>
@@ -777,7 +773,7 @@ const ProductDetails = () => {
                                         <p className="text-[10px] text-gray-400">PDF Document • 2.2 MB • ASTM D2578 / IS : 6104</p>
                                     </div>
                                 </div>
-                                <a 
+                                <a
                                     href="/ImageTech_Dyne_Pen_Catalog.pdf"
                                     download="ImageTech_Dyne_Pen_Catalog.pdf"
                                     target="_blank"
